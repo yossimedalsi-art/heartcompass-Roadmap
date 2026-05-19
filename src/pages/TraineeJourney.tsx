@@ -21,7 +21,7 @@ export default function TraineeJourney() {
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
   
   // Find resource archetype from ALL worlds
-  let resourceArchetype = null;
+    let resourceArchetype: (typeof worldsData)[0]['archetypes'][0] | null = null;
   if (activeResourceCard) {
     worldsData.forEach(w => {
       const found = w.archetypes.find(a => a.id === activeResourceCard);
@@ -351,9 +351,9 @@ export default function TraineeJourney() {
               <AnimatePresence>
                 {isAnswered && currentStep.patternRevealed && selectedEnv && (
                   <motion.div 
-                    initial={{ opacity: 0, height: 0, mt: 0 }} 
-                    animate={{ opacity: 1, height: 'auto', mt: 24 }} 
-                    className="overflow-hidden"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="overflow-hidden mt-6"
                   >
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 flex gap-4 text-blue-100">
                       <Droplet className="w-6 h-6 text-blue-400 shrink-0 mt-1" />
