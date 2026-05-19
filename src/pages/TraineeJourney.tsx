@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cloud, TreePine, Gamepad2, ArrowLeft, Droplet, Download, Compass } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { worldsData } from "../data/worlds";
+import { worldsData, Archetype } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
 
 export default function TraineeJourney() {
@@ -21,7 +21,7 @@ export default function TraineeJourney() {
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
   
   // Find resource archetype from ALL worlds
-    let resourceArchetype: (typeof worldsData)[0]['archetypes'][0] | null = null;
+      let resourceArchetype: Archetype | null = null;
   if (activeResourceCard) {
     worldsData.forEach(w => {
       const found = w.archetypes.find(a => a.id === activeResourceCard);
