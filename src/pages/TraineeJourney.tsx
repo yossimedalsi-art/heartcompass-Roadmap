@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cloud, TreePine, Gamepad2, ArrowLeft, Droplet, Download, Compass } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { worldsData, Archetype } from "../data/worlds";
+import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
 
 export default function TraineeJourney() {
@@ -21,7 +21,7 @@ export default function TraineeJourney() {
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
   
   // Find resource archetype from ALL worlds
-      let resourceArchetype: Archetype | null = null;
+  let resourceArchetype: any = null;
   if (activeResourceCard) {
     worldsData.forEach(w => {
       const found = w.archetypes.find(a => a.id === activeResourceCard);
@@ -351,9 +351,9 @@ export default function TraineeJourney() {
               <AnimatePresence>
                 {isAnswered && currentStep.patternRevealed && selectedEnv && (
                   <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="overflow-hidden mt-6"
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }} 
+                    animate={{ opacity: 1, height: 'auto', marginTop: 24 }} 
+                    className="overflow-hidden"
                   >
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 flex gap-4 text-blue-100">
                       <Droplet className="w-6 h-6 text-blue-400 shrink-0 mt-1" />
@@ -405,7 +405,7 @@ export default function TraineeJourney() {
   }
 
   // Find the injected resource archetype if it exists
-  let injectedArchetype = null;
+  let injectedArchetype: any = null;
   if (injectedResource) {
     worldsData.forEach(w => {
       const found = w.archetypes.find(a => a.id === injectedResource);

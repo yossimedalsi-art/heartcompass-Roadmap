@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Plus, Send, LayoutDashboard, Compass, FileText, Target, Ear, HeartPulse, ExternalLink, CalendarDays, AlertTriangle } from "lucide-react";
+import { Copy, Plus, LayoutDashboard, Compass, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle } from "lucide-react";
 import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
 
@@ -32,7 +32,7 @@ export default function CoachDashboard() {
     const checkState = () => {
       const stateStr = localStorage.getItem(`session_${sessionId}`);
       if (stateStr) {
-                  setSessionState((prev: any) => {
+        setSessionState((prev: any) => {
           if (JSON.stringify(prev) === stateStr) return prev;
           return JSON.parse(stateStr);
         });
