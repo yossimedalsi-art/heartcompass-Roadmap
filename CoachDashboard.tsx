@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Copy, Plus, LayoutDashboard, Compass, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle } from "lucide-react";
 import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
+import { db } from "../lib/firebase";
+import { doc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
 export default function CoachDashboard() {
   const [magicLink, setMagicLink] = useState("");
@@ -10,13 +12,18 @@ export default function CoachDashboard() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   
-  const generateLink = () => {
+  const generateLink = async () => {
     const randomId = Math.random().toString(36).substring(2, 8);
     setSessionId(randomId);
     setMagicLink(`${window.location.origin}/journey/${randomId}`);
     setSessionState({ phase: 0 }); 
-    localStorage.setItem(`session_${randomId}`, JSON.stringify({ phase: 0 }));
     localStorage.setItem("active_coach_session", randomId);
+    
+    try {
+      await setDoc(doc(db, "live_sessions", randomId), { phase: 0 });
+    } catch (e) {
+      console.error("Error creating session", e);
+    }
   };
 
   useEffect(() => {
@@ -29,27 +36,18 @@ export default function CoachDashboard() {
 
   useEffect(() => {
     if (!sessionId) return;
-    const checkState = () => {
-      const stateStr = localStorage.getItem(`session_${sessionId}`);
-      if (stateStr) {
-        setSessionState((prev: any) => {
-          if (JSON.stringify(prev) === stateStr) return prev;
-          return JSON.parse(stateStr);
-        });
+    const docRef = doc(db, "live_sessions", sessionId);
+    const unsubscribe = onSnapshot(docRef, (docSnap: any) => {
+      if (docSnap.exists()) {
+        setSessionState(docSnap.data());
       } else {
-        // Trainee ended the session
         setSessionState(null);
         setSessionId(null);
         setMagicLink("");
         localStorage.removeItem("active_coach_session");
       }
-    };
-    window.addEventListener("storage", checkState);
-    const interval = setInterval(checkState, 500); 
-    return () => {
-      window.removeEventListener("storage", checkState);
-      clearInterval(interval);
-    }
+    });
+    return () => unsubscribe();
   }, [sessionId]);
 
   const activeWorld = worldsData.find(w => w.id === sessionState?.environment);
@@ -113,21 +111,40 @@ export default function CoachDashboard() {
               
               <div className="print:hidden flex flex-col gap-8">
                 {/* Archetype Card Display */}
-                {chosenArchetype && (
-                <div className="bg-[#11131a] rounded-2xl border border-white/5 shadow-lg overflow-hidden flex flex-col items-center p-8">
-                  <div className="text-xs font-bold tracking-widest text-neutral-500 mb-6 uppercase">מצב המחבא / {chosenArchetype.name}</div>
-                  <div className="w-48 h-72 rounded-2xl border-4 border-amber-500/20 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.15)] relative">
-                    {chosenArchetype.imageUrl ? (
-                      <img src={chosenArchetype.imageUrl} alt="Card" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-black flex items-center justify-center text-4xl">🔮</div>
-                    )}
-                  </div>
-                  <h2 className="text-3xl font-black text-white mt-6">{chosenArchetype.name}</h2>
-                  <p className="text-amber-500 text-sm mt-2">"{sessionState?.trigger || chosenArchetype.description}"</p>
-                  <div className="text-neutral-500 text-xs mt-4">0 תגובות • 0 דפוסים • 0 כוחות</div>
+                <div className="flex flex-col md:flex-row justify-center gap-6">
+                  {chosenArchetype && (
+                    <div className="bg-[#11131a] rounded-2xl border border-white/5 shadow-lg overflow-hidden flex flex-col items-center p-8 w-full md:w-72">
+                      <div className="text-xs font-bold tracking-widest text-neutral-500 mb-6 uppercase">מצב המחבא / {chosenArchetype.name}</div>
+                      <div className="w-40 h-64 rounded-2xl border-4 border-amber-500/20 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.15)] relative">
+                        {chosenArchetype.imageUrl ? (
+                          <img src={chosenArchetype.imageUrl} alt="Card" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-black flex items-center justify-center text-4xl">🔮</div>
+                        )}
+                      </div>
+                      <h2 className="text-2xl font-black text-white mt-6 text-center">{chosenArchetype.name}</h2>
+                      <p className="text-amber-500 text-sm mt-2 text-center">"{sessionState?.trigger || chosenArchetype.description}"</p>
+                    </div>
+                  )}
+
+                  {sessionState?.resourceArchetype && worldsData.flatMap(w => w.archetypes).find(a => a.id === sessionState.resourceArchetype) && (() => {
+                    const resCard = worldsData.flatMap(w => w.archetypes).find(a => a.id === sessionState.resourceArchetype);
+                    return (
+                      <div className="bg-[#11131a] rounded-2xl border border-blue-500/20 shadow-[0_0_40px_rgba(59,130,246,0.1)] overflow-hidden flex flex-col items-center p-8 w-full md:w-72 relative">
+                        <div className="absolute top-4 left-4 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest">משאב פעיל</div>
+                        <div className="text-xs font-bold tracking-widest text-blue-400 mb-6 uppercase">כוח מלווה / {resCard?.name}</div>
+                        <div className="w-40 h-64 rounded-2xl border-4 border-blue-500/40 overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.2)] relative">
+                          {resCard?.imageUrl ? (
+                            <img src={resCard.imageUrl} alt="Resource Card" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-blue-900 flex items-center justify-center text-4xl">✨</div>
+                          )}
+                        </div>
+                        <h2 className="text-2xl font-black text-white mt-6 text-center">{resCard?.name}</h2>
+                      </div>
+                    );
+                  })()}
                 </div>
-              )}
 
               {/* The Active Question (Mirrors Trainee UI) */}
               {currentStep && (
@@ -337,13 +354,15 @@ export default function CoachDashboard() {
               {worldsData.map(world => (
                 world.archetypes.map(arc => (
                   <div key={arc.id} className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center hover:border-amber-500/50 cursor-pointer transition"
-                    onClick={() => {
+                    onClick={async () => {
                       if (sessionId) {
-                        const currentStored = JSON.parse(localStorage.getItem(`session_${sessionId}`) || "{}");
-                        localStorage.setItem(`session_${sessionId}`, JSON.stringify({
-                          ...currentStored,
-                          coachInjectedResource: arc.id
-                        }));
+                        try {
+                          await updateDoc(doc(db, "live_sessions", sessionId), {
+                            coachInjectedResource: arc.id
+                          });
+                        } catch (e) {
+                          console.error("Error injecting resource", e);
+                        }
                       }
                       setIsResourceModalOpen(false);
                     }}
