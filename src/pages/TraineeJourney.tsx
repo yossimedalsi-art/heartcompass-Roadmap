@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cloud, TreePine, Gamepad2, ArrowLeft, Droplet, Download, Compass } from "lucide-react";
+import Backpack from "../components/Backpack";
 import { useParams } from "react-router-dom";
 import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
@@ -18,6 +19,9 @@ export default function TraineeJourney() {
   const [customInput, setCustomInput] = useState<string>("");
   const [injectedResource, setInjectedResource] = useState<string | null>(null);
   const [activeResourceCard, setActiveResourceCard] = useState<string | null>(null);
+  const [resourcePowerUsed, setResourcePowerUsed] = useState(false);
+  const injectedResourceRef = useRef<string | null>(null);
+  injectedResourceRef.current = injectedResource;
 
   const activeWorld = worldsData.find(w => w.id === selectedEnv);
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
@@ -78,19 +82,22 @@ export default function TraineeJourney() {
   }, [sessionId, currentPhase, selectedEnv, activeCard, activeResourceCard, selectedTrigger, structuredAnswers]);
 
   // Listen for Coach Commands
+  // injectedResourceRef is used instead of injectedResource in deps to avoid recreating
+  // the listener on every dismiss — which would trigger a stale Firestore snapshot and
+  // reopen the modal before updateDoc clears the field (race condition).
   useEffect(() => {
     if (!sessionId) return;
     const docRef = doc(db, "live_sessions", sessionId);
     const unsubscribe = onSnapshot(docRef, (docSnap: any) => {
       if (docSnap.exists()) {
         const parsed = docSnap.data();
-        if (parsed.coachInjectedResource && parsed.coachInjectedResource !== injectedResource) {
+        if (parsed.coachInjectedResource && parsed.coachInjectedResource !== injectedResourceRef.current) {
           setInjectedResource(parsed.coachInjectedResource);
         }
       }
     });
     return () => unsubscribe();
-  }, [sessionId, injectedResource]);
+  }, [sessionId]);
 
   const handleDialogueSelect = (stepId: string, option: string) => {
     setStructuredAnswers(prev => ({ ...prev, [stepId]: option }));
@@ -116,6 +123,26 @@ export default function TraineeJourney() {
       if (found) injectedArchetype = found;
     });
   }
+
+  const handleUseResource = () => {
+    setResourcePowerUsed(true);
+    setTimeout(() => setResourcePowerUsed(false), 2500);
+  };
+
+  const renderResourcePowerFlash = () => (
+    <AnimatePresence>
+      {resourcePowerUsed && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed bottom-24 left-6 z-[60] bg-amber-500 text-black font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-sm"
+        >
+          ✨ הכוח פועל! {resourceArchetype?.name} מחזק אותך
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   const renderInjectedModal = () => {
     return (
@@ -190,6 +217,8 @@ export default function TraineeJourney() {
           ))}
         </div>
         {renderInjectedModal()}
+        <Backpack resourceArchetype={resourceArchetype} onUseResource={handleUseResource} />
+        {renderResourcePowerFlash()}
       </div>
     );
   }
@@ -306,6 +335,8 @@ export default function TraineeJourney() {
           })}
         </div>
         {renderInjectedModal()}
+        <Backpack resourceArchetype={resourceArchetype} onUseResource={handleUseResource} />
+        {renderResourcePowerFlash()}
       </div>
     );
   }
@@ -479,6 +510,8 @@ export default function TraineeJourney() {
           </div>
         </main>
         {renderInjectedModal()}
+        <Backpack resourceArchetype={resourceArchetype} onUseResource={handleUseResource} />
+        {renderResourcePowerFlash()}
       </div>
     );
   }
