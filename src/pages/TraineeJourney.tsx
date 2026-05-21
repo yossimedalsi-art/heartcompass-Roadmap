@@ -4,6 +4,8 @@ import { Cloud, TreePine, Gamepad2, ArrowLeft, Droplet, Download, Compass } from
 import { useParams } from "react-router-dom";
 import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
+import { db } from "../lib/firebase";
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
 export default function TraineeJourney() {
   const { sessionId } = useParams();
@@ -32,50 +34,62 @@ export default function TraineeJourney() {
   // Persistence
   useEffect(() => {
     if (!sessionId) return;
-    const saved = localStorage.getItem(`session_${sessionId}`);
-    if (saved && currentPhase === 0) {
-      const parsed = JSON.parse(saved);
-      if (parsed.phase > 0) {
-        setCurrentPhase(parsed.phase);
-        setSelectedEnv(parsed.environment);
-        setActiveCard(parsed.archetype);
-        setSelectedTrigger(parsed.trigger);
-        setStructuredAnswers(parsed.answers || {});
-        return;
+    const fetchSession = async () => {
+      try {
+        const docRef = doc(db, "live_sessions", sessionId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && currentPhase === 0) {
+          const parsed = docSnap.data();
+          if (parsed.phase > 0) {
+            setCurrentPhase(parsed.phase);
+            setSelectedEnv(parsed.environment);
+            setActiveCard(parsed.archetype);
+            setActiveResourceCard(parsed.resourceArchetype || null);
+            setSelectedTrigger(parsed.trigger);
+            setStructuredAnswers(parsed.answers || {});
+          }
+        }
+      } catch (e) {
+        console.error("Error loading session:", e);
       }
-    }
-    if (currentPhase > 0) {
-      const currentStored = JSON.parse(localStorage.getItem(`session_${sessionId}`) || "{}");
-      localStorage.setItem(`session_${sessionId}`, JSON.stringify({
-        ...currentStored,
-        phase: currentPhase,
-        environment: selectedEnv,
-        archetype: activeCard,
-        resourceArchetype: activeResourceCard,
-        trigger: selectedTrigger,
-        answers: structuredAnswers
-      }));
+    };
+    fetchSession();
+  }, [sessionId, currentPhase]);
+
+  useEffect(() => {
+    if (currentPhase > 0 && sessionId) {
+      const saveState = async () => {
+        try {
+          const docRef = doc(db, "live_sessions", sessionId);
+          await setDoc(docRef, {
+            phase: currentPhase,
+            environment: selectedEnv,
+            archetype: activeCard,
+            resourceArchetype: activeResourceCard,
+            trigger: selectedTrigger,
+            answers: structuredAnswers
+          }, { merge: true });
+        } catch (e) {
+          console.error("Error saving state:", e);
+        }
+      };
+      saveState();
     }
   }, [sessionId, currentPhase, selectedEnv, activeCard, activeResourceCard, selectedTrigger, structuredAnswers]);
 
   // Listen for Coach Commands
   useEffect(() => {
     if (!sessionId) return;
-    const checkCoachCommands = () => {
-      const stateStr = localStorage.getItem(`session_${sessionId}`);
-      if (stateStr) {
-        const parsed = JSON.parse(stateStr);
+    const docRef = doc(db, "live_sessions", sessionId);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const parsed = docSnap.data();
         if (parsed.coachInjectedResource && parsed.coachInjectedResource !== injectedResource) {
           setInjectedResource(parsed.coachInjectedResource);
         }
       }
-    };
-    window.addEventListener("storage", checkCoachCommands);
-    const interval = setInterval(checkCoachCommands, 1000);
-    return () => {
-      window.removeEventListener("storage", checkCoachCommands);
-      clearInterval(interval);
-    };
+    });
+    return () => unsubscribe();
   }, [sessionId, injectedResource]);
 
   const handleDialogueSelect = (stepId: string, option: string) => {
@@ -445,13 +459,16 @@ export default function TraineeJourney() {
               </p>
               
               <button 
-                onClick={() => {
+                onClick={async () => {
                   setActiveResourceCard(injectedResource);
                   setInjectedResource(null);
                   if (sessionId) {
-                    const currentStored = JSON.parse(localStorage.getItem(`session_${sessionId}`) || "{}");
-                    delete currentStored.coachInjectedResource;
-                    localStorage.setItem(`session_${sessionId}`, JSON.stringify(currentStored));
+                    try {
+                      const docRef = doc(db, "live_sessions", sessionId);
+                      await updateDoc(docRef, { coachInjectedResource: null });
+                    } catch (e) {
+                      console.error("Error clearing coach injected resource", e);
+                    }
                   }
                 }}
                 className="w-full py-4 bg-amber-500 text-black font-bold text-lg rounded-xl hover:bg-amber-400 transition shadow-[0_0_20px_rgba(245,158,11,0.4)]"
