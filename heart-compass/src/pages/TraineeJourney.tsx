@@ -6,6 +6,10 @@ import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import JourneyMap from "../components/JourneyMap";
+import Backpack from "../components/Backpack";
+import BreathingGame from "../components/minigames/BreathingGame";
+import ThoughtSorter from "../components/minigames/ThoughtSorter";
 
 export default function TraineeJourney() {
   const { sessionId } = useParams();
@@ -18,6 +22,12 @@ export default function TraineeJourney() {
   const [customInput, setCustomInput] = useState<string>("");
   const [injectedResource, setInjectedResource] = useState<string | null>(null);
   const [activeResourceCard, setActiveResourceCard] = useState<string | null>(null);
+
+  // Gamification States
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const [hasBreathed, setHasBreathed] = useState<boolean>(false);
+  const [hasSortedThoughts, setHasSortedThoughts] = useState<boolean>(false);
+  const [resourceUsed, setResourceUsed] = useState<boolean>(false);
 
   const activeWorld = worldsData.find(w => w.id === selectedEnv);
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
@@ -322,7 +332,15 @@ export default function TraineeJourney() {
           <span className="text-amber-500 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span> שלב {currentPhase} מתוך {journeyPhases.length}
           </span>
-          <span className="text-neutral-500 text-sm">חקירה עם {chosenArchetype?.name}</span>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setShowMap(true)}
+              className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition flex items-center gap-2 font-bold"
+            >
+              <Compass className="w-4 h-4" /> מפת המסע
+            </button>
+            <span className="text-neutral-500 text-sm flex items-center">חקירה עם {chosenArchetype?.name}</span>
+          </div>
         </header>
 
         <main className="flex-1 w-full max-w-3xl flex flex-col items-center">
@@ -368,7 +386,22 @@ export default function TraineeJourney() {
 
               {currentStep.uiType === "structured-dialogue" && currentStep.options && selectedEnv && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  {currentStep.options[selectedEnv as keyof typeof currentStep.options]?.map((option, idx) => {
+                  {currentStep.id === "step_6_thought" && !hasSortedThoughts ? (
+                    <div className="col-span-full">
+                      <ThoughtSorter onComplete={() => setHasSortedThoughts(true)} />
+                    </div>
+                  ) : currentStep.id === "step_7_protection" && !hasBreathed ? (
+                    <div className="col-span-full">
+                      <BreathingGame onComplete={() => setHasBreathed(true)} />
+                    </div>
+                  ) : currentStep.id === "step_8_resource_help" && !resourceUsed && resourceArchetype ? (
+                    <div className="col-span-full text-center py-8">
+                      <div className="text-xl text-neutral-400 mb-4">השדומר עדיין חוסם את הדרך. עליך להשתמש בכוח שמצאת.</div>
+                      <div className="animate-bounce text-amber-500 font-bold">פתח את תרמיל הכלים למטה 🎒</div>
+                    </div>
+                  ) : (
+                    <>
+                      {currentStep.options[selectedEnv as keyof typeof currentStep.options]?.map((option, idx) => {
                     const isSelected = answer === option;
                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
                     
@@ -422,8 +455,10 @@ export default function TraineeJourney() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </>
               )}
+            </div>
+          )}
 
               {/* Pattern Revealed Block (Only shows after answering) */}
               <AnimatePresence>
@@ -479,6 +514,16 @@ export default function TraineeJourney() {
           </div>
         </main>
         {renderInjectedModal()}
+
+        {/* Gamification Overlays */}
+        {showMap && <JourneyMap currentPhase={currentPhase} onClose={() => setShowMap(false)} />}
+        
+        {currentPhase > 0 && (
+          <Backpack 
+            resourceArchetype={resourceArchetype} 
+            onUseResource={() => setResourceUsed(true)} 
+          />
+        )}
       </div>
     );
   }
