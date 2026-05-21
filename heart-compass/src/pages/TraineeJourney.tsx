@@ -108,6 +108,68 @@ export default function TraineeJourney() {
     { id: "arcade", title: "עיר הניאון", icon: Gamepad2, color: "text-fuchsia-400" }
   ];
 
+  // Find the injected resource archetype if it exists
+  let injectedArchetype: any = null;
+  if (injectedResource) {
+    worldsData.forEach(w => {
+      const found = w.archetypes.find(a => a.id === injectedResource);
+      if (found) injectedArchetype = found;
+    });
+  }
+
+  const renderInjectedModal = () => {
+    return (
+      <AnimatePresence>
+        {injectedResource && injectedArchetype && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#0d0f14]/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
+              className="bg-[#171a23] border border-amber-500/50 shadow-[0_0_80px_rgba(245,158,11,0.2)] rounded-3xl p-8 max-w-lg w-full text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/20 rounded-full blur-[60px] pointer-events-none"></div>
+              
+              <span className="text-amber-500 font-bold tracking-widest text-xs mb-6 block uppercase">המאמן שלח לך משאב חדש</span>
+              
+              <div className="w-full h-64 rounded-2xl border-2 border-amber-500/30 overflow-hidden relative mb-6">
+                {injectedArchetype.imageUrl ? (
+                  <img src={injectedArchetype.imageUrl} alt={injectedArchetype.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-black flex items-center justify-center text-6xl">✨</div>
+                )}
+              </div>
+              
+              <h2 className="text-3xl font-black mb-4 text-white">{injectedArchetype.name}</h2>
+              <p className="text-neutral-300 text-lg leading-relaxed mb-8">
+                {injectedArchetype.description}
+              </p>
+              
+              <button 
+                onClick={async () => {
+                  setActiveResourceCard(injectedResource);
+                  setInjectedResource(null);
+                  if (sessionId) {
+                    try {
+                      const docRef = doc(db, "live_sessions", sessionId);
+                      await updateDoc(docRef, { coachInjectedResource: null });
+                    } catch (e) {
+                      console.error("Error clearing coach injected resource", e);
+                    }
+                  }
+                }}
+                className="w-full py-4 bg-amber-500 text-black font-bold text-lg rounded-xl hover:bg-amber-400 transition shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+              >
+                צרף למסע שלי
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  };
+
   if (currentPhase === 0) {
     return (
       <div className="min-h-screen bg-[#0d0f14] text-white flex flex-col items-center justify-center p-6 relative" dir="rtl">
@@ -127,6 +189,7 @@ export default function TraineeJourney() {
             </motion.button>
           ))}
         </div>
+        {renderInjectedModal()}
       </div>
     );
   }
@@ -242,6 +305,7 @@ export default function TraineeJourney() {
             );
           })}
         </div>
+        {renderInjectedModal()}
       </div>
     );
   }
@@ -414,71 +478,13 @@ export default function TraineeJourney() {
             </AnimatePresence>
           </div>
         </main>
+        {renderInjectedModal()}
       </div>
     );
   }
 
-  // Find the injected resource archetype if it exists
-  let injectedArchetype: any = null;
-  if (injectedResource) {
-    worldsData.forEach(w => {
-      const found = w.archetypes.find(a => a.id === injectedResource);
-      if (found) injectedArchetype = found;
-    });
-  }
-
   return (
     <div className="min-h-screen bg-[#0d0f14] text-white flex flex-col items-center justify-center p-6 text-center relative" dir="rtl">
-      
-      {/* Injected Resource Overlay */}
-      <AnimatePresence>
-        {injectedResource && injectedArchetype && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#0d0f14]/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
-          >
-            <motion.div 
-              initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
-              className="bg-[#171a23] border border-amber-500/50 shadow-[0_0_80px_rgba(245,158,11,0.2)] rounded-3xl p-8 max-w-lg w-full text-center relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/20 rounded-full blur-[60px] pointer-events-none"></div>
-              
-              <span className="text-amber-500 font-bold tracking-widest text-xs mb-6 block uppercase">המאמן שלח לך משאב חדש</span>
-              
-              <div className="w-full h-64 rounded-2xl border-2 border-amber-500/30 overflow-hidden relative mb-6">
-                {injectedArchetype.imageUrl ? (
-                  <img src={injectedArchetype.imageUrl} alt={injectedArchetype.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-black flex items-center justify-center text-6xl">✨</div>
-                )}
-              </div>
-              
-              <h2 className="text-3xl font-black mb-4 text-white">{injectedArchetype.name}</h2>
-              <p className="text-neutral-300 text-lg leading-relaxed mb-8">
-                {injectedArchetype.description}
-              </p>
-              
-              <button 
-                onClick={async () => {
-                  setActiveResourceCard(injectedResource);
-                  setInjectedResource(null);
-                  if (sessionId) {
-                    try {
-                      const docRef = doc(db, "live_sessions", sessionId);
-                      await updateDoc(docRef, { coachInjectedResource: null });
-                    } catch (e) {
-                      console.error("Error clearing coach injected resource", e);
-                    }
-                  }
-                }}
-                className="w-full py-4 bg-amber-500 text-black font-bold text-lg rounded-xl hover:bg-amber-400 transition shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-              >
-                צרף למסע שלי
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="absolute top-6 right-6 print:hidden">
         <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-full hover:bg-amber-500 hover:text-black font-bold transition text-sm">
