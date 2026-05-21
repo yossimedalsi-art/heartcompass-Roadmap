@@ -111,8 +111,9 @@ export default function CoachDashboard() {
           ) : (
             <div className="flex flex-col gap-8 pb-20">
               
-              {/* Archetype Card Display */}
-              {chosenArchetype && (
+              <div className="print:hidden flex flex-col gap-8">
+                {/* Archetype Card Display */}
+                {chosenArchetype && (
                 <div className="bg-[#11131a] rounded-2xl border border-white/5 shadow-lg overflow-hidden flex flex-col items-center p-8">
                   <div className="text-xs font-bold tracking-widest text-neutral-500 mb-6 uppercase">מצב המחבא / {chosenArchetype.name}</div>
                   <div className="w-48 h-72 rounded-2xl border-4 border-amber-500/20 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.15)] relative">
@@ -257,6 +258,7 @@ export default function CoachDashboard() {
                   </div>
                 </div>
               )}
+              </div>
 
               {/* End of Journey Plan (Visible at the very end) */}
               {sessionState?.phase >= 10 && (

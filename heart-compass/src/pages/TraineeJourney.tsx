@@ -448,6 +448,7 @@ export default function TraineeJourney() {
                 onClick={() => {
                   setActiveResourceCard(injectedResource);
                   setInjectedResource(null);
+                  setCurrentPhase(8); // JUMP DIRECTLY TO RESOURCE INTEGRATION
                   if (sessionId) {
                     const currentStored = JSON.parse(localStorage.getItem(`session_${sessionId}`) || "{}");
                     delete currentStored.coachInjectedResource;
