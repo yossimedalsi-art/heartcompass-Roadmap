@@ -37,7 +37,7 @@ export default function CoachDashboard() {
   useEffect(() => {
     if (!sessionId) return;
     const docRef = doc(db, "live_sessions", sessionId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    const unsubscribe = onSnapshot(docRef, (docSnap: any) => {
       if (docSnap.exists()) {
         setSessionState(docSnap.data());
       } else {
@@ -97,6 +97,19 @@ export default function CoachDashboard() {
                 <Link to={new URL(magicLink).pathname} target="_blank" className="ml-2 text-xs bg-amber-500/20 text-amber-400 px-3 py-2 rounded-lg hover:bg-amber-500/30 transition">
                   פתח מתאמן עכשיו
                 </Link>
+                <button 
+                  onClick={() => {
+                    if (window.confirm("האם אתה בטוח שברצונך לסיים את המסע הנוכחי ולהתחיל אחד חדש?")) {
+                      localStorage.removeItem("active_coach_session");
+                      setSessionId(null);
+                      setMagicLink("");
+                      setSessionState(null);
+                    }
+                  }} 
+                  className="ml-2 text-xs bg-red-500/20 text-red-400 px-3 py-2 rounded-lg hover:bg-red-500/30 transition border border-red-500/30"
+                >
+                  סיום מסע
+                </button>
               </div>
             )}
           </div>

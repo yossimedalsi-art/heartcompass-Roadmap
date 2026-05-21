@@ -81,7 +81,7 @@ export default function TraineeJourney() {
   useEffect(() => {
     if (!sessionId) return;
     const docRef = doc(db, "live_sessions", sessionId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    const unsubscribe = onSnapshot(docRef, (docSnap: any) => {
       if (docSnap.exists()) {
         const parsed = docSnap.data();
         if (parsed.coachInjectedResource && parsed.coachInjectedResource !== injectedResource) {
