@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap } from "lucide-react";
+import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap, RotateCcw } from "lucide-react";
 import HeartCompassLogo from "../components/HeartCompassLogo";
 import { worldsData } from "../data/worlds";
 import { journeyPhases, homeworkPlans } from "../data/journey";
@@ -14,7 +14,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
   const magicLink = `${window.location.origin}/journey/${sessionId}`;
 
   const showResourceAlert =
-    (sessionState?.phase ?? 0) >= 6 && !sessionState?.resourceArchetype;
+    (sessionState?.phase ?? 0) >= 7 && !sessionState?.resourceArchetype;
 
   const handleEndJourney = async () => {
     try {
@@ -109,6 +109,32 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
             </div>
           ) : (
             <div className="flex flex-col gap-8 pb-20">
+
+              {/* Pre-session panel: shown while trainee hasn't chosen a world yet */}
+              {(sessionState?.phase ?? 0) <= 1 && sessionState?.previousAgreement && (
+                <div className="print:hidden bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
+                  <p className="text-amber-500 text-xs font-bold tracking-widest uppercase mb-3">המסע הקודם — נקודת פתיחה לסשן זה</p>
+                  <p className="text-neutral-400 text-sm mb-2">ההסכם שהמתאמן לקח על עצמו:</p>
+                  <p className="text-white font-bold text-lg mb-4">"{sessionState.previousAgreement}"</p>
+                  <p className="text-neutral-500 text-sm">שאל בפתיחה: <span className="text-neutral-300 italic">האם הצלחת לקיים את ההסכם? מה קרה מאז?</span></p>
+                </div>
+              )}
+
+              {/* Recurring archetype alert */}
+              {sessionState?.archetype && sessionState?.previousArchetype &&
+               sessionState.archetype === sessionState.previousArchetype && (
+                <div className="print:hidden flex items-start gap-3 bg-orange-500/10 border border-orange-500/30 rounded-2xl p-5">
+                  <RotateCcw className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-orange-400 font-bold text-sm mb-1">
+                      דמות חוזרת — {worldsData.flatMap(w => w.archetypes).find(a => a.id === sessionState.archetype)?.name || sessionState.archetype}
+                    </p>
+                    <p className="text-neutral-300 text-sm">
+                      אותה דמות הופיעה גם בסשן הקודם. שאל: <span className="italic text-white">"מה השתנה מאז הפגישה האחרונה עם הדמות הזו? האם היא חזקה יותר או חלשה יותר?"</span>
+                    </p>
+                  </div>
+                </div>
+              )}
               
               <div className="print:hidden flex flex-col gap-8">
                 {/* Archetype Card Display */}
@@ -155,7 +181,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                       {currentStep.traineeTitle.replace(/\[ארכיטיפ\]/g, `"${chosenArchetype?.name || ''}"`).replace(/\[משאב\]/g, `"${sessionState?.resourceArchetype ? worldsData.flatMap(w => w.archetypes).find(a => a.id === sessionState.resourceArchetype)?.name : 'הכוח החדש'}"`)}
                     </h3>
                     <div className="flex items-center gap-2 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> שלב {currentStep.order}
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> שלב {(sessionState?.phase ?? 0) - 2} מתוך 10
                     </div>
                   </div>
 
