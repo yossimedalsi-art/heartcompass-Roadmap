@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cloud, TreePine, Gamepad2, ArrowLeft, Droplet, Download, Compass, Map } from "lucide-react";
+import { Compass, TreePine, Cloud, Gamepad2, Music, ArrowLeft, Download, Map } from "lucide-react";
 import Backpack from "../components/Backpack";
 import JourneyMap from "../components/JourneyMap";
 import { useParams } from "react-router-dom";
-import { worldsData } from "../data/worlds";
-import { journeyPhases, homeworkPlans } from "../data/journey";
+import { worldsData, goodPowersData } from "../data/worlds";
+import { journeyPhases, stage2Phases, stage3Phases, homeworkPlans } from "../data/journey";
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
@@ -75,6 +75,9 @@ export default function TraineeJourney() {
   const [activeResourceCard, setActiveResourceCard] = useState<string | null>(null);
   const [resourcePowerUsed, setResourcePowerUsed] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [previousAgreement, setPreviousAgreement] = useState<string | null>(null);
+  const [sessionNumber, setSessionNumber] = useState<number>(1);
+  const [journeyStage, setJourneyStage] = useState<number>(1);
   const injectedResourceRef = useRef<string | null>(null);
   injectedResourceRef.current = injectedResource;
 
@@ -92,6 +95,8 @@ export default function TraineeJourney() {
     });
   }
 
+  const activePhases = journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
+
   // Persistence
   useEffect(() => {
     if (!sessionId) return;
@@ -101,6 +106,11 @@ export default function TraineeJourney() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && currentPhase === 0) {
           const parsed = docSnap.data();
+          // Always load continuation fields
+          if (parsed.previousAgreement) setPreviousAgreement(parsed.previousAgreement);
+          if (parsed.sessionNumber) setSessionNumber(parsed.sessionNumber);
+          if (parsed.journeyStage) setJourneyStage(parsed.journeyStage);
+          // Restore in-progress session
           if (parsed.phase > 0) {
             setCurrentPhase(parsed.phase);
             setSelectedEnv(parsed.environment);
@@ -122,13 +132,15 @@ export default function TraineeJourney() {
       const saveState = async () => {
         try {
           const docRef = doc(db, "live_sessions", sessionId);
+          const isJourneyComplete = currentPhase > activePhases.length;
           await setDoc(docRef, {
             phase: currentPhase,
             environment: selectedEnv,
             archetype: activeCard,
             resourceArchetype: activeResourceCard,
             trigger: selectedTrigger,
-            answers: structuredAnswers
+            answers: structuredAnswers,
+            ...(isJourneyComplete && { status: "completed" })
           }, { merge: true });
         } catch (e) {
           console.error("Error saving state:", e);
@@ -150,6 +162,10 @@ export default function TraineeJourney() {
         const parsed = docSnap.data();
         if (parsed.coachInjectedResource && parsed.coachInjectedResource !== injectedResourceRef.current) {
           setInjectedResource(parsed.coachInjectedResource);
+        }
+        // Listen for Coach advancing the phase (mainly used during meditation steps)
+        if (parsed.phase && parsed.phase > currentPhase) {
+          setCurrentPhase(parsed.phase);
         }
       }
     });
@@ -185,6 +201,7 @@ export default function TraineeJourney() {
     setResourcePowerUsed(true);
     setTimeout(() => setResourcePowerUsed(false), 2500);
   };
+
 
   const renderResourcePowerFlash = () => (
     <AnimatePresence>
@@ -254,6 +271,7 @@ export default function TraineeJourney() {
     );
   };
 
+
   const worldSelectThemes: Record<string, { hover: string; iconBg: string; glow: string; textColor: string }> = {
     clouds: { hover: "hover:border-indigo-500/60 hover:bg-indigo-500/5 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]", iconBg: "bg-indigo-500/10", glow: "group-hover:text-indigo-400", textColor: "text-indigo-400" },
     forest: { hover: "hover:border-emerald-500/60 hover:bg-emerald-500/5 hover:shadow-[0_0_40px_rgba(34,197,94,0.2)]", iconBg: "bg-emerald-500/10", glow: "group-hover:text-emerald-400", textColor: "text-emerald-400" },
@@ -264,6 +282,15 @@ export default function TraineeJourney() {
     return (
       <div className="min-h-screen bg-[#0d0f14] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden" dir="rtl">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.07) 0%, transparent 65%)" }} />
+        {/* Previous agreement bubble */}
+        {previousAgreement && sessionNumber > 1 && (
+          <div className="w-full max-w-lg mb-10 bg-amber-500/8 border border-amber-500/25 rounded-2xl p-5 text-right">
+            <p className="text-amber-500 text-xs font-bold tracking-widest uppercase mb-2">ההסכם מהמסע הקודם</p>
+            <p className="text-white text-base font-bold leading-relaxed">"{previousAgreement}"</p>
+            <p className="text-neutral-500 text-sm mt-2">לפני שנתחיל — רגע של נשימה עם ההתחייבות הזו</p>
+          </div>
+        )}
+
         <h1 className="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-l from-amber-200 to-amber-500">
           לאן נכנסים היום?
         </h1>
@@ -416,8 +443,8 @@ export default function TraineeJourney() {
   }
 
   // Phases 3 to 8
-  if (currentPhase >= 3 && currentPhase <= journeyPhases.length) {
-    const currentStep = journeyPhases[currentPhase - 1];
+  if (currentPhase >= 3 && currentPhase <= activePhases.length) {
+    const currentStep = activePhases[currentPhase - 1];
     const answer = structuredAnswers[currentStep.id];
     const isAnswered = !!answer;
 
@@ -426,10 +453,11 @@ export default function TraineeJourney() {
         {/* World-themed gradient overlay */}
         <div className="fixed inset-0 pointer-events-none z-0" style={{ background: `${theme.radial1}${theme.radial2 ? `, ${theme.radial2}` : ""}` }} />
         <div className="fixed inset-0 pointer-events-none z-0 opacity-50" style={{ background: theme.patternBg }} />
+        {renderInjectedModal()}
 
         <header className="w-full max-w-4xl flex justify-between items-center mt-6 mb-12 relative z-10">
           <span className={`${theme.accentText} font-bold tracking-widest text-xs uppercase flex items-center gap-2`}>
-            <span className={`w-2 h-2 rounded-full ${theme.accentText.replace('text-', 'bg-')}`}></span> שלב {currentPhase - 2} מתוך {journeyPhases.length}
+            <span className={`w-2 h-2 rounded-full ${theme.accentText.replace('text-', 'bg-')}`}></span> שלב {currentPhase - 2} מתוך {activePhases.length}
           </span>
           <div className="flex items-center gap-3">
             <span className="text-neutral-500 text-sm">חקירה עם {chosenArchetype?.name}</span>
@@ -543,35 +571,96 @@ export default function TraineeJourney() {
                 </div>
               )}
 
-              {/* Pattern Revealed Block (Only shows after answering) */}
-              <AnimatePresence>
-                {isAnswered && currentStep.patternRevealed && selectedEnv && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }} 
-                    animate={{ opacity: 1, height: 'auto', marginTop: 24 }} 
-                    className="overflow-hidden"
-                  >
-                    <div className={`${theme.accentBg} border ${theme.accentBorder} rounded-2xl p-6 flex gap-4 text-neutral-100`}>
-                      <Droplet className={`w-6 h-6 ${theme.accentText} shrink-0 mt-1`} />
-                      <div>
-                        <h4 className={`${theme.accentText} font-bold text-sm tracking-widest mb-2 uppercase`}>דפוס שנחשף</h4>
-                        <p className="text-lg">
-                          {(() => {
-                            const optionsArray = currentStep.options?.[selectedEnv as keyof typeof currentStep.options] || [];
-                            const answerIdx = optionsArray.indexOf(answer);
-                            if (answerIdx !== -1) {
-                              const patterns = currentStep.patternRevealed?.[selectedEnv as keyof typeof currentStep.patternRevealed];
-                              return patterns ? patterns[answerIdx] : "";
-                            }
-                            // Custom input fallback
-                            return "מדהים שהצלחת לנסח את זה בעצמך. הדפוס מנסה להגן עליך, אבל עכשיו אתה מתחיל לראות אותו מבחוץ.";
-                          })()}
-                        </p>
-                      </div>
+              {/* Text Input Block */}
+              {currentStep.uiType === "text-input" && (
+                <div className="mb-8 w-full">
+                  <div className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col ${
+                    answer && answer.trim().length > 0
+                    ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]' 
+                    : 'bg-black/30 border-white/5'
+                  }`}>
+                    <div className="text-xs text-neutral-500 mb-2 flex items-center gap-2">✎ תשובה חופשית</div>
+                    <div className="flex gap-3 items-center">
+                      <input 
+                        type="text" 
+                        placeholder="הקלד את התשובה שלך כאן..." 
+                        value={customInput}
+                        onChange={(e) => setCustomInput(e.target.value)}
+                        className="bg-transparent flex-1 outline-none text-sm text-white placeholder-neutral-600"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && customInput.trim()) {
+                            handleDialogueSelect(currentStep.id, customInput);
+                          }
+                        }}
+                      />
+                      <button 
+                        onClick={() => { 
+                          if (customInput.trim()) handleDialogueSelect(currentStep.id, customInput); 
+                        }}
+                        className="bg-amber-500/20 text-amber-500 px-5 py-2 rounded-lg text-sm font-bold hover:bg-amber-500 hover:text-black transition"
+                      >
+                        שמור
+                      </button>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
+              )}
+
+              {/* Good Powers Block */}
+              {currentStep.uiType === "good-powers" && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  {goodPowersData.map((power) => {
+                    const isSelected = answer === power.name;
+                    return (
+                      <motion.button
+                        key={power.id}
+                        onClick={() => {
+                          handleDialogueSelect(currentStep.id, power.name);
+                          setActiveResourceCard(power.id);
+                        }}
+                        className={`p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center justify-center gap-3 ${
+                          isSelected 
+                          ? 'bg-amber-500/20 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' 
+                          : 'bg-[#11131a] border-white/10 hover:border-amber-500/50 hover:bg-black/40'
+                        }`}
+                      >
+                        <div className="w-16 h-16 rounded-full bg-[#171a23] overflow-hidden border border-white/10 flex items-center justify-center text-3xl">
+                          {power.imageUrl ? (
+                            <img src={power.imageUrl} alt={power.name} className="w-full h-full object-cover" />
+                          ) : (
+                            power.icon
+                          )}
+                        </div>
+                        <span className={`font-bold ${isSelected ? 'text-amber-400' : 'text-neutral-300'}`}>{power.name}</span>
+                        <span className="text-xs text-neutral-500">{power.description}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Meditation Block */}
+              {currentStep.uiType === "meditation" && (
+                <div className="mb-8 w-full">
+                  <div className={`p-8 rounded-2xl border ${
+                    answer ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.15)]' : 'bg-blue-500/10 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.15)]'
+                  } flex flex-col items-center justify-center text-center transition-all`}>
+                    <div className={`w-20 h-20 rounded-full ${answer ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'} flex items-center justify-center mb-6`}>
+                      <Music className="w-10 h-10" />
+                    </div>
+                    <h3 className={`text-2xl font-black ${answer ? 'text-amber-400' : 'text-blue-400'} mb-3`}>זמן האזנה למאמן</h3>
+                    <p className="text-neutral-300 text-lg mb-8 leading-relaxed max-w-md">
+                      אין צורך להקליד כלום עכשיו.<br/>פשוט לעצום עיניים, לנשום עמוק, ולהקשיב לקול של המאמן שלך.
+                    </p>
+                    
+                    <div className="mt-8 text-amber-500/80 text-sm font-bold animate-pulse">
+                      המאמן מנחה את השלב הזה. אנא המתן...
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pattern Revealed Block removed as requested, only visible to Coach */}
 
             </motion.div>
           </AnimatePresence>
@@ -638,17 +727,26 @@ export default function TraineeJourney() {
               ההסכם החדש שלנו <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             </h3>
             <p className="text-xl font-bold text-white leading-relaxed">
-              "{structuredAnswers['step_10_integration'] || 'אקח נשימה במקום להגיב מיד'}"
+              "{structuredAnswers[journeyStage === 3 ? 's3_step_9_new_contract' : journeyStage === 2 ? 's2_step_10_agreement' : 'step_10_integration'] || 'אקח נשימה במקום להגיב מיד'}"
             </p>
           </div>
 
           <div className="w-full text-right bg-[#11131a] border border-white/5 rounded-2xl p-6 mb-8 print:border-neutral-200 print:bg-transparent">
             <h3 className="text-amber-500 font-bold text-sm tracking-widest uppercase mb-6 border-b border-white/5 pb-2">תכנית עבודה: שיעורי בית</h3>
-            
+
+            {/* Continuation bridge — shown from session 2+ */}
+            {previousAgreement && sessionNumber > 1 && (
+              <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest mb-1">ההסכם מהמסע הקודם</p>
+                <p className="text-neutral-300 text-sm font-bold">"{previousAgreement}"</p>
+                <p className="text-neutral-500 text-xs mt-2">בנוסף לתרגילים למטה — המשך לחזק את ההתחייבות הזו</p>
+              </div>
+            )}
+
             <div className="mb-6">
               <h4 className="text-neutral-400 font-bold text-sm mb-3">72 השעות הקרובות:</h4>
               <ul className="space-y-3 pr-4 border-r-2 border-amber-500/20 list-none">
-                {selectedEnv && homeworkPlans[selectedEnv as keyof typeof homeworkPlans]?.next72.map((item, idx) => (
+                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"]?.next72.map((item: string, idx: number) => (
                   <li key={idx} className="text-neutral-300 text-base relative before:content-[''] before:absolute before:right-[-22px] before:top-2 before:w-1.5 before:h-1.5 before:bg-amber-500 before:rounded-full">
                     {item}
                   </li>
@@ -659,7 +757,7 @@ export default function TraineeJourney() {
             <div>
               <h4 className="text-neutral-400 font-bold text-sm mb-3">השבוע הקרוב:</h4>
               <ul className="space-y-3 pr-4 border-r-2 border-amber-500/20 list-none">
-                {selectedEnv && homeworkPlans[selectedEnv as keyof typeof homeworkPlans]?.nextWeek.map((item, idx) => (
+                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"]?.nextWeek.map((item: string, idx: number) => (
                   <li key={idx} className="text-neutral-300 text-base relative before:content-[''] before:absolute before:right-[-22px] before:top-2 before:w-1.5 before:h-1.5 before:bg-amber-500 before:rounded-full">
                     {item}
                   </li>

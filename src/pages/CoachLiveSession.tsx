@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap, RotateCcw } from "lucide-react";
+import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap, RotateCcw, Music } from "lucide-react";
 import HeartCompassLogo from "../components/HeartCompassLogo";
-import { worldsData } from "../data/worlds";
-import { journeyPhases, homeworkPlans } from "../data/journey";
+import { worldsData, goodPowersData } from "../data/worlds";
+import { journeyPhases, stage2Phases, stage3Phases, homeworkPlans } from "../data/journey";
 import { db } from "../lib/firebase";
 import { doc, updateDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
 
@@ -44,7 +44,9 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
 
   const activeWorld = worldsData.find(w => w.id === sessionState?.environment);
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === sessionState?.archetype);
-  const currentStep = sessionState?.phase > 0 ? journeyPhases[Math.min(sessionState.phase - 1, journeyPhases.length - 1)] : null;
+  const journeyStage = sessionState?.journeyStage || 1;
+  const activePhases = journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
+  const currentStep = sessionState?.phase > 0 ? activePhases[Math.min(sessionState.phase - 1, activePhases.length - 1)] : null;
 
   const handlePrint = () => {
     window.print();
@@ -218,7 +220,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                       <div className="col-span-1 md:col-span-2 mt-2 p-5 rounded-2xl border bg-blue-500/10 border-blue-500/20 flex items-start gap-4">
                         <span className="w-8 h-8 shrink-0 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">💧</span>
                         <div>
-                          <h4 className="text-blue-400 font-bold text-sm tracking-widest uppercase mb-1">דפוס שנחשף (המתאמן קורא כעת)</h4>
+                          <h4 className="text-blue-400 font-bold text-sm tracking-widest uppercase mb-1">תובנה קלינית על התשובה (לשימוש המאמן)</h4>
                           <p className="text-blue-100 font-medium text-lg">
                             {(() => {
                               const answer = sessionState.answers[currentStep.id];
@@ -312,6 +314,49 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Coach Controls for Meditation & Audio */}
+                  {currentStep.uiType === "meditation" && (
+                    <div className="mt-8 border-t border-white/10 pt-6">
+                      <h4 className="flex items-center gap-2 text-fuchsia-400 font-bold text-sm mb-4 uppercase tracking-widest">
+                        <Music className="w-4 h-4" /> שליטת מאמן: נגן מוזיקה ומעבר מסכים
+                      </h4>
+                      
+                      <div className="flex flex-col gap-4">
+                        <div className="bg-[#11131a] rounded-xl overflow-hidden w-full">
+                          <iframe 
+                            data-testid="embed-iframe" 
+                            style={{ borderRadius: '12px' }}
+                            src="https://open.spotify.com/embed/track/78Imm5D2GkYuemN2DFx0Z5?utm_source=generator&theme=0" 
+                            width="100%" 
+                            height="152" 
+                            frameBorder="0" 
+                            allowFullScreen={false} 
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                            loading="lazy"
+                          ></iframe>
+                        </div>
+
+                        <button 
+                          onClick={async () => {
+                            if (sessionId) {
+                              try {
+                                await updateDoc(doc(db, "live_sessions", sessionId), {
+                                  phase: sessionState.phase + 1
+                                });
+                              } catch (e) {
+                                console.error("Error advancing phase", e);
+                              }
+                            }
+                          }}
+                          className="w-full py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold text-lg rounded-xl transition shadow-[0_0_20px_rgba(217,70,239,0.3)] flex items-center justify-center gap-2"
+                        >
+                          העבר מתאמן למסך הבא (שליטת מאמן)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                 </div>
               )}
               </div>
@@ -336,7 +381,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                         <CalendarDays className="w-4 h-4" /> 72 השעות הקרובות
                       </h4>
                       <ul className="space-y-4 pr-6 border-r-2 border-amber-500/20">
-                        {homeworkPlans[sessionState?.environment as keyof typeof homeworkPlans]?.next72.map((item, idx) => (
+                        {homeworkPlans[sessionState?.journeyStage || 1]?.[sessionState?.environment as "clouds"|"forest"|"arcade"]?.next72.map((item: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-3 text-white text-lg">
                             <span className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0"></span> {item}
                           </li>
@@ -350,7 +395,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                         <CalendarDays className="w-4 h-4" /> השבוע הקרוב
                       </h4>
                       <ul className="space-y-4 pr-6 border-r-2 border-amber-500/20">
-                        {homeworkPlans[sessionState?.environment as keyof typeof homeworkPlans]?.nextWeek.map((item, idx) => (
+                        {homeworkPlans[sessionState?.journeyStage || 1]?.[sessionState?.environment as "clouds"|"forest"|"arcade"]?.nextWeek.map((item: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-3 text-white text-lg">
                             <span className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0"></span> {item}
                           </li>
@@ -364,7 +409,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                         <CalendarDays className="w-4 h-4" /> 30 הימים הקרובים (מעקב קליני)
                       </h4>
                       <ul className="space-y-4 pr-6 border-r-2 border-amber-500/20">
-                        {homeworkPlans[sessionState?.environment as keyof typeof homeworkPlans]?.next30.map((item, idx) => (
+                        {homeworkPlans[sessionState?.journeyStage || 1]?.[sessionState?.environment as "clouds"|"forest"|"arcade"]?.next30.map((item: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-3 text-white text-lg">
                             <span className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0"></span> {item}
                           </li>
@@ -423,14 +468,13 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
             <p className="text-neutral-400 mb-6">בחר דמות מתוך החפיסה. הקלף יקפוץ מיד במסך של המתאמן ויציע לו עזרה ותמיכה.</p>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
-              {worldsData.map(world => (
-                world.archetypes.map(arc => (
-                  <div key={arc.id} className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center hover:border-amber-500/50 cursor-pointer transition"
+              {goodPowersData.map(power => (
+                  <div key={power.id} className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center hover:border-amber-500/50 cursor-pointer transition"
                     onClick={async () => {
                       if (sessionId) {
                         try {
                           await updateDoc(doc(db, "live_sessions", sessionId), {
-                            coachInjectedResource: arc.id
+                            coachInjectedResource: power.id
                           });
                         } catch (e) {
                           console.error("Error injecting resource", e);
@@ -439,18 +483,17 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                       setIsResourceModalOpen(false);
                     }}
                   >
-                    <div className="w-20 h-20 rounded-full bg-[#171a23] mb-3 overflow-hidden border border-white/10">
-                      {arc.imageUrl ? (
-                        <img src={arc.imageUrl} alt={arc.name} className="w-full h-full object-cover" />
+                    <div className="w-20 h-20 rounded-full bg-[#171a23] mb-3 overflow-hidden border border-white/10 flex items-center justify-center text-4xl">
+                      {power.imageUrl ? (
+                        <img src={power.imageUrl} alt={power.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">✨</div>
+                        power.icon
                       )}
                     </div>
-                    <h4 className="text-white font-bold mb-1">{arc.name}</h4>
-                    <span className="text-xs text-neutral-500">{world.title}</span>
+                    <span className="text-white font-bold block">{power.name}</span>
+                    <span className="text-neutral-500 text-xs mt-1 block">{power.role}</span>
                   </div>
-                ))
-              ))}
+                ))}
             </div>
           </div>
         </div>

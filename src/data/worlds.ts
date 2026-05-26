@@ -1,7 +1,8 @@
 export type Archetype = {
   id: string;
   name: string;
-  role: string; 
+  role: string;
+  icon?: string;
   description: string;
   coachPrompt: string;
   triggers: string[];
@@ -198,5 +199,88 @@ export const worldsData: World[] = [
         imageUrl: "/images/ai.png"
       }
     ]
+  }
+];
+
+export const goodPowersData: Archetype[] = [
+  {
+    id: "power_hug",
+    name: "חיבוק עוטף",
+    role: "נחמה",
+    icon: "🫂",
+    description: "חיבוק שמזכיר שאתה לא לבד ויש מי ששומר עליך.",
+    coachPrompt: "מציע ביטחון פיזי ורגשי",
+    triggers: [],
+    imageUrl: "/images/powers/power_hug.png"
+  },
+  {
+    id: "power_word",
+    name: "מילה טובה",
+    role: "עידוד",
+    icon: "💬",
+    description: "להזכיר לעצמך שאתה עושה הכי טוב שאתה יכול, וזה מספיק.",
+    coachPrompt: "מציע קול פנימי חומל",
+    triggers: [],
+    imageUrl: "/images/powers/power_word.png"
+  },
+  {
+    id: "power_breath",
+    name: "נשימה עמוקה",
+    role: "השהייה",
+    icon: "🌬️",
+    description: "כלי שעוזר להכניס חמצן ולהרגיע את הלחץ בגוף.",
+    coachPrompt: "מציע חזרה לקרקע דרך הגוף",
+    triggers: [],
+    imageUrl: "/images/powers/power_breathe.png"
+  },
+  {
+    id: "power_listen",
+    name: "נראות ותיקוף",
+    role: "הכלה",
+    icon: "👁️",
+    description: "פשוט להרגיש שרואים אותך כמו שאתה.",
+    coachPrompt: "מציע נראות ותיקוף",
+    triggers: [],
+    imageUrl: "/images/powers/power_validation.png"
+  },
+  {
+    id: "power_grounding",
+    name: "קרקוע",
+    role: "יציבות",
+    icon: "🌳",
+    description: "להרגיש את הרגליים על הקרקע ולחזור לכאן ועכשיו.",
+    coachPrompt: "מציע יציבות כשהכל מרגיש סוער",
+    triggers: [],
+    imageUrl: "/images/powers/power_grounding.png"
+  },
+  {
+    id: "power_pause",
+    name: "פסק זמן",
+    role: "מנוחה",
+    icon: "⏸️",
+    description: "רשות לקחת הפסקה מהכל בלי להרגיש אשמה.",
+    coachPrompt: "מציע שבירת לופ דרך התנתקות זמנית",
+    triggers: [],
+    imageUrl: "/images/powers/power_pause.png"
+  },
+  {
+    id: "power_compassion",
+    name: "חמלה עצמית",
+    role: "קבלה",
+    icon: "❤️",
+    description: "להיות החבר הכי טוב של עצמך, במיוחד כשטועים.",
+    coachPrompt: "מציע מנוגד ישיר לביקורת פנימית",
+    triggers: [],
+    imageUrl: "/images/powers/power_compassion.png"
+  },
+  {
+    id: "power_action",
+    name: "תנועה או יצירה",
+    role: "שחרור",
+    icon: "🎨",
+    description: "להזיז את הגוף או ליצור משהו כדי לפרוק אנרגיה תקועה.",
+    coachPrompt: "מציע המרת אנרגיה (סובלימציה)",
+    triggers: [],
+    imageUrl: "/images/powers/power_action.png"
   }
 ];
