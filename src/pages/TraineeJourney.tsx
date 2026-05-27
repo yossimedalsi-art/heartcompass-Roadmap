@@ -9,6 +9,30 @@ import { journeyPhases, stage2Phases, stage3Phases, stage4Phases, homeworkPlans 
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
+
+const FALLBACK_IMAGE = "/images/guardian.png";
+
+const safeImage = (src?: string) => {
+  if (!src || src.trim() === "") {
+    return FALLBACK_IMAGE;
+  }
+
+  return src;
+};
+
+const handleImageError = (
+  e: React.SyntheticEvent<HTMLImageElement, Event>
+) => {
+  const target = e.currentTarget;
+
+  if (target.src.includes(FALLBACK_IMAGE)) {
+    return;
+  }
+
+  target.src = FALLBACK_IMAGE;
+};
+
+
 const worldThemes: Record<string, {
   bg: string;
   radial1: string;
@@ -257,7 +281,12 @@ export default function TraineeJourney() {
 
               <div className="w-full h-64 rounded-2xl border-2 border-amber-500/30 overflow-hidden relative mb-6">
                 {injectedArchetype.imageUrl ? (
-                  <img src={injectedArchetype.imageUrl} alt={injectedArchetype.name} className="w-full h-full object-cover" />
+                  <img
+                          src={safeImage(injectedArchetype.imageUrl)}
+                          alt={injectedArchetype.name}
+                          className="w-full h-full object-cover"
+                          onError={handleImageError}
+                        />
                 ) : (
                   <div className="w-full h-full bg-black flex items-center justify-center text-6xl">✨</div>
                 )}
@@ -351,7 +380,7 @@ export default function TraineeJourney() {
         <div className="fixed inset-0 pointer-events-none z-0 opacity-60" style={{ background: theme.patternBg }} />
 
         {/* BACK TO WORLDS BUTTON */}
-        <div className="fixed top-6 right-6 z-50">
+        <div className="absolute top-6 right-6 z-10">
           <button
             onClick={() => {
               setCurrentPhase(0);
@@ -387,7 +416,12 @@ export default function TraineeJourney() {
                   <div className="absolute inset-0 backface-hidden bg-[#171a23] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col items-center text-center shadow-2xl hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] transition-all group">
                     <div className="w-full h-64 bg-black relative">
                       {arc.imageUrl ? (
-                        <img src={arc.imageUrl} alt={arc.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <img
+                            src={safeImage(arc.imageUrl)}
+                            alt={arc.name}
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                            onError={handleImageError}
+                          />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-5xl">🔮</div>
                       )}
@@ -502,7 +536,12 @@ export default function TraineeJourney() {
                 {/* Original Archetype */}
                 <div className="w-32 h-48 md:w-40 md:h-64 rounded-2xl border-4 border-amber-500/20 overflow-hidden shadow-[0_0_30px_rgba(245,158,11,0.1)] relative">
                   {chosenArchetype?.imageUrl ? (
-                    <img src={chosenArchetype.imageUrl} alt="Card" className="w-full h-full object-cover" />
+                    <img
+                      src={safeImage(chosenArchetype.imageUrl)}
+                      alt="Card"
+                      className="w-full h-full object-cover"
+                      onError={handleImageError}
+                    />
                   ) : (
                     <div className="w-full h-full bg-black flex items-center justify-center text-4xl">🔮</div>
                   )}
@@ -518,7 +557,12 @@ export default function TraineeJourney() {
                     className="w-32 h-48 md:w-40 md:h-64 rounded-2xl border-4 border-blue-500/40 overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.2)] relative"
                   >
                     {resourceArchetype.imageUrl ? (
-                      <img src={resourceArchetype.imageUrl} alt="Resource Card" className="w-full h-full object-cover" />
+                      <img
+                        src={safeImage(resourceArchetype.imageUrl)}
+                        alt="Resource Card"
+                        className="w-full h-full object-cover"
+                        onError={handleImageError}
+                      />
                     ) : (
                       <div className="w-full h-full bg-blue-900 flex items-center justify-center text-4xl">✨</div>
                     )}
@@ -648,7 +692,12 @@ export default function TraineeJourney() {
                       >
                         <div className="w-16 h-16 rounded-full bg-[#171a23] overflow-hidden border border-white/10 flex items-center justify-center text-3xl">
                           {power.imageUrl ? (
-                            <img src={power.imageUrl} alt={power.name} className="w-full h-full object-cover" />
+                            <img
+                        src={safeImage(power.imageUrl)}
+                        alt={power.name}
+                        className="w-full h-full object-cover"
+                        onError={handleImageError}
+                      />
                           ) : (
                             power.icon
                           )}
