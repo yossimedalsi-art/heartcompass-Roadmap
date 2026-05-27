@@ -257,7 +257,7 @@ export const worldsData: World[] = [
         description: "מחזיקה את פנס האמת שמראה את הרצון הפנימי הנקי.",
         coachPrompt: "אותנטיות. שאלת סקרנות: מה הפנס מראה כשמסננים רעשי רקע?",
         triggers: ["הרגשתי חיבור עמוק למה שאני באמת רוצה", "הצלחתי להגיד לא למשהו שלא התאים לי", "בחרתי לפעול מתוך אמונה בעצמי", "לקחתי צעד קטן ואמיץ לעבר המטרה שלי"],
-        imageUrl: "/images/guardian.png"
+        imageUrl: "/images/magic_guardian.png"
       }
     ]
   }
