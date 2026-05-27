@@ -351,7 +351,7 @@ export default function TraineeJourney() {
         <div className="fixed inset-0 pointer-events-none z-0 opacity-60" style={{ background: theme.patternBg }} />
 
         {/* BACK TO WORLDS BUTTON */}
-        <div className="absolute top-6 right-6 z-10">
+        <div className="fixed top-6 right-6 z-50">
           <button
             onClick={() => {
               setCurrentPhase(0);
