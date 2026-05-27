@@ -413,21 +413,9 @@ export default function TraineeJourney() {
           </p>
         </header>
 
-        {(() => {
-          const goalTriggers: Record<string, string[]> = {
-            clouds: ["מייצרת מחשבות ספק וחרדה סביב המטרה שלי", "גורמת לי לנתח ולתכנן במקום לפעול", "מבלבלת אותי עד שאני לא יודע מה הצעד הנכון", "גורמת לי לדחות עד שאהיה מוכן מספיק"],
-            forest: ["גורמת לי לפחד מה יגידו אחרים על המטרה שלי", "מרגישה שאני לא ראוי להצליח במטרה הזו", "גורמת לי להסתיר את המטרה מאנשים קרובים", "מייצרת בי ספק אם אני בכלל ראוי למטרה הזו"],
-            arcade: ["מסיחה את דעתי לעשרה דברים אחרים", "גורמת לי לרצות שהמטרה תהיה מושלמת לפני שמתחיל", "מייצרת ויכוח פנימי על אם זו המטרה הנכונה", "שומרת אותי עסוק בכל דבר חוץ מהמטרה עצמה"],
-            fairies: ["הופכת כל פעולה ממשית לפחות מושכת מהחלום", "גורמת לי לחכות לרגע הנכון שלעולם לא מגיע", "מנתקת אותי מהמטרה ברגע שמופיע הקושי הראשון", "לוחשת לי שהמטרה היא פנטזיה ולא מציאות"],
-          };
-
-          return (
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000 pb-20">
           {activeWorld?.archetypes.map(arc => {
             const isFlipped = activeCard === arc.id;
-            const triggersToShow = (journeyStage === 4 && selectedEnv && goalTriggers[selectedEnv])
-              ? goalTriggers[selectedEnv]
-              : arc.triggers;
 
             return (
               <div key={arc.id} className="relative h-[500px] [perspective:1000px]">
@@ -468,7 +456,7 @@ export default function TraineeJourney() {
                     </h4>
 
                     <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                      {triggersToShow.map((trigger, idx) => (
+                      {arc.triggers.map((trigger, idx) => (
                         <button
                           key={idx}
                           onClick={(e) => { e.stopPropagation(); setSelectedTrigger(trigger); }}
@@ -519,8 +507,6 @@ export default function TraineeJourney() {
             );
           })}
         </div>
-          );
-        })()}
         {renderInjectedModal()}
         <Backpack resourceArchetype={resourceArchetype} onUseResource={handleUseResource} />
         {renderResourcePowerFlash()}
