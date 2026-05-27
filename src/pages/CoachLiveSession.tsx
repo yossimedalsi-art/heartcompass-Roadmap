@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap, RotateCcw, Music } from "lucide-react";
+import { Copy, Plus, LayoutDashboard, FileText, Target, Ear, HeartPulse, CalendarDays, AlertTriangle, XCircle, Zap, RotateCcw, Music, Map } from "lucide-react";
 import HeartCompassLogo from "../components/HeartCompassLogo";
 import { worldsData, goodPowersData } from "../data/worlds";
-import { journeyPhases, stage2Phases, stage3Phases, homeworkPlans } from "../data/journey";
+import { journeyPhases, stage2Phases, stage3Phases, stage4Phases, homeworkPlans } from "../data/journey";
 import { db } from "../lib/firebase";
 import { doc, updateDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
 
@@ -45,7 +45,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
   const activeWorld = worldsData.find(w => w.id === sessionState?.environment);
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === sessionState?.archetype);
   const journeyStage = sessionState?.journeyStage || 1;
-  const activePhases = journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
+  const activePhases = journeyStage === 4 ? stage4Phases : journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
   const currentStep = sessionState?.phase > 0 ? activePhases[Math.min(sessionState.phase - 1, activePhases.length - 1)] : null;
 
   const handlePrint = () => {
@@ -78,6 +78,33 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
 
       <main className="flex-1 flex p-6 gap-6 h-[calc(100vh-64px)] overflow-hidden print:h-auto print:overflow-visible max-w-7xl mx-auto w-full">
         
+        {/* Right Panel: Answers Map */}
+        <section className="hidden lg:flex w-80 flex-col gap-4 overflow-y-auto custom-scrollbar print:hidden">
+          <div className="bg-[#11131a] rounded-2xl border border-white/5 shadow-2xl p-6">
+            <h3 className="text-amber-500 font-bold mb-4 flex items-center gap-2">
+              מפת תשובות עד כה
+            </h3>
+            <div className="space-y-4">
+              {Object.keys(sessionState?.answers || {}).length === 0 ? (
+                <p className="text-neutral-500 text-sm">המתאמן טרם ענה על שאלות בשלב זה.</p>
+              ) : (
+                Object.entries(sessionState?.answers || {}).map(([key, value]) => {
+                  const phase = activePhases.find((p: any) => p.id === key);
+                  if (!phase) return null;
+                  return (
+                    <div key={key} className="text-sm border-b border-white/5 pb-3">
+                      <span className="text-neutral-500 block mb-1 text-xs">
+                        {phase.traineeTitle.replace(/\[ארכיטיפ\]/g, 'הדמות').replace(/\[משאב\]/g, 'המשאב')}
+                      </span>
+                      <span className="text-white font-medium break-words whitespace-pre-wrap">{value as string}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Center Panel: Live Flow */}
         <section className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar print:overflow-visible">
           
@@ -183,7 +210,7 @@ export default function CoachLiveSession({ sessionId, onBack }: { sessionId: str
                       {currentStep.traineeTitle.replace(/\[ארכיטיפ\]/g, `"${chosenArchetype?.name || ''}"`).replace(/\[משאב\]/g, `"${sessionState?.resourceArchetype ? worldsData.flatMap(w => w.archetypes).find(a => a.id === sessionState.resourceArchetype)?.name : 'הכוח החדש'}"`)}
                     </h3>
                     <div className="flex items-center gap-2 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> שלב {(sessionState?.phase ?? 0) - 2} מתוך 10
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> {(sessionState?.phase ?? 0) <= 2 ? "שלב התחלתי" : `שלב ${(sessionState?.phase ?? 0) - 2} מתוך ${activePhases.length - 2}`}
                     </div>
                   </div>
 

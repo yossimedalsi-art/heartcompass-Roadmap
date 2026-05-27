@@ -5,7 +5,7 @@ import Backpack from "../components/Backpack";
 import JourneyMap from "../components/JourneyMap";
 import { useParams } from "react-router-dom";
 import { worldsData, goodPowersData } from "../data/worlds";
-import { journeyPhases, stage2Phases, stage3Phases, homeworkPlans } from "../data/journey";
+import { journeyPhases, stage2Phases, stage3Phases, stage4Phases, homeworkPlans } from "../data/journey";
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
@@ -100,7 +100,7 @@ export default function TraineeJourney() {
     }
   }
 
-  const activePhases = journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
+  const activePhases = journeyStage === 4 ? stage4Phases : journeyStage === 3 ? stage3Phases : journeyStage === 2 ? stage2Phases : journeyPhases;
 
   // Persistence
   useEffect(() => {
@@ -737,11 +737,33 @@ export default function TraineeJourney() {
               ההסכם החדש שלנו <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             </h3>
             <p className="text-xl font-bold text-white leading-relaxed">
-              "{structuredAnswers[journeyStage === 3 ? 's3_step_9_new_contract' : journeyStage === 2 ? 's2_step_10_agreement' : 'step_10_integration'] || 'אקח נשימה במקום להגיב מיד'}"
+              "{structuredAnswers[journeyStage === 4 ? 's4_step_6_action' : journeyStage === 3 ? 's3_step_9_new_contract' : journeyStage === 2 ? 's2_step_10_agreement' : 'step_10_integration'] || 'אקח נשימה במקום להגיב מיד'}"
             </p>
           </div>
 
+          <div className="w-full bg-[#11131a] border border-white/10 rounded-2xl p-6 mb-8">
+            <h3 className="text-amber-500 font-bold text-sm tracking-widest uppercase mb-6 text-center">מעגל החסם שזיהינו</h3>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+              <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
+                <span className="text-xs text-neutral-500 mb-2">מחשבה (פרשנות)</span>
+                <span className="text-white font-bold">{structuredAnswers['step_6_thought'] || structuredAnswers['s2_step_3_interpretation'] || structuredAnswers['s3_step_2_secondary_gain'] || structuredAnswers['s4_step_4_secondary_gain'] || 'לא צוין'}</span>
+              </div>
+              <div className="text-amber-500">→</div>
+              <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
+                <span className="text-xs text-neutral-500 mb-2">רגש / נקודה רגישה</span>
+                <span className="text-white font-bold">{structuredAnswers['step_3_feeling'] || structuredAnswers['s2_step_4_sensitive_spot'] || structuredAnswers['s3_step_3_need'] || structuredAnswers['s4_step_3_encounter'] || 'לא צוין'}</span>
+              </div>
+              <div className="text-amber-500">→</div>
+              <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
+                <span className="text-xs text-neutral-500 mb-2">תגובה אוטומטית</span>
+                <span className="text-white font-bold">{structuredAnswers['step_5_urge'] || structuredAnswers['s2_step_5_reaction'] || structuredAnswers['s3_step_1_trigger'] || 'הפעולה שהחסם מייצר'}</span>
+              </div>
+            </div>
+            <p className="text-xs text-neutral-500 text-center mt-4">זהו הלופ האוטומטי שהשומר הפעיל כדי להגן עליך. כעת כשאנחנו רואים אותו במעגל, אנחנו יכולים לעצור אותו.</p>
+          </div>
+
           <div className="w-full text-right bg-[#11131a] border border-white/5 rounded-2xl p-6 mb-8 print:border-neutral-200 print:bg-transparent">
+
             <h3 className="text-amber-500 font-bold text-sm tracking-widest uppercase mb-6 border-b border-white/5 pb-2">תכנית עבודה: שיעורי בית</h3>
 
             {/* Continuation bridge — shown from session 2+ */}
