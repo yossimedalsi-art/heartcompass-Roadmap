@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, TreePine, Cloud, Gamepad2, Music, ArrowLeft, Download, Map } from "lucide-react";
+import { Compass, TreePine, Cloud, Gamepad2, Music, ArrowLeft, Download, Map, Sparkles } from "lucide-react";
 import Backpack from "../components/Backpack";
 import JourneyMap from "../components/JourneyMap";
 import { useParams } from "react-router-dom";
@@ -49,6 +49,16 @@ const worldThemes: Record<string, {
     glowColor: "rgba(217,70,239,0.25)",
     patternBg: "repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(217,70,239,0.03) 60px,rgba(217,70,239,0.03) 61px),repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(217,70,239,0.03) 60px,rgba(217,70,239,0.03) 61px)",
   },
+  fairies: {
+    bg: "bg-[#0a0710]",
+    radial1: "radial-gradient(ellipse at 30% 10%, rgba(236,72,153,0.14) 0%, transparent 55%)",
+    radial2: "radial-gradient(ellipse at 70% 90%, rgba(167,139,250,0.12) 0%, transparent 55%)",
+    accentText: "text-pink-400",
+    accentBorder: "border-pink-500/40",
+    accentBg: "bg-pink-500/10",
+    glowColor: "rgba(236,72,153,0.22)",
+    patternBg: "repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(236,72,153,0.025) 40px,rgba(236,72,153,0.025) 41px),repeating-linear-gradient(-45deg,transparent,transparent 40px,rgba(236,72,153,0.025) 40px,rgba(236,72,153,0.025) 41px)",
+  },
 };
 
 const defaultTheme = {
@@ -64,9 +74,9 @@ const defaultTheme = {
 
 export default function TraineeJourney() {
   const { sessionId } = useParams();
-  
+
   const [selectedEnv, setSelectedEnv] = useState<string | null>(null);
-  const [currentPhase, setCurrentPhase] = useState<number>(0); 
+  const [currentPhase, setCurrentPhase] = useState<number>(0);
   const [activeCard, setActiveCard] = useState<string | null>(null);
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
@@ -85,7 +95,7 @@ export default function TraineeJourney() {
 
   const activeWorld = worldsData.find(w => w.id === selectedEnv);
   const chosenArchetype = activeWorld?.archetypes.find(a => a.id === activeCard);
-  
+
   // Find resource archetype from ALL worlds
   let resourceArchetype: any = null;
   if (activeResourceCard) {
@@ -190,7 +200,8 @@ export default function TraineeJourney() {
   const environments = [
     { id: "clouds", title: "ממלכת העננים", icon: Cloud, color: "text-blue-400" },
     { id: "forest", title: "היער הפנימי", icon: TreePine, color: "text-emerald-400" },
-    { id: "arcade", title: "עיר הניאון", icon: Gamepad2, color: "text-fuchsia-400" }
+    { id: "arcade", title: "עיר הניאון", icon: Gamepad2, color: "text-fuchsia-400" },
+    { id: "fairies", title: "יער הפיות והשדונים", icon: Sparkles, color: "text-pink-400" },
   ];
 
   // Find the injected resource archetype if it exists
@@ -232,18 +243,18 @@ export default function TraineeJourney() {
     return (
       <AnimatePresence>
         {injectedResource && injectedArchetype && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-[#0d0f14]/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
               className="bg-[#171a23] border border-amber-500/50 shadow-[0_0_80px_rgba(245,158,11,0.2)] rounded-3xl p-8 max-w-lg w-full text-center relative overflow-hidden"
             >
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/20 rounded-full blur-[60px] pointer-events-none"></div>
-              
+
               <span className="text-amber-500 font-bold tracking-widest text-xs mb-6 block uppercase">המאמן שלח לך משאב חדש</span>
-              
+
               <div className="w-full h-64 rounded-2xl border-2 border-amber-500/30 overflow-hidden relative mb-6">
                 {injectedArchetype.imageUrl ? (
                   <img src={injectedArchetype.imageUrl} alt={injectedArchetype.name} className="w-full h-full object-cover" />
@@ -251,13 +262,13 @@ export default function TraineeJourney() {
                   <div className="w-full h-full bg-black flex items-center justify-center text-6xl">✨</div>
                 )}
               </div>
-              
+
               <h2 className="text-3xl font-black mb-4 text-white">{injectedArchetype.name}</h2>
               <p className="text-neutral-300 text-lg leading-relaxed mb-8">
                 {injectedArchetype.description}
               </p>
-              
-              <button 
+
+              <button
                 onClick={async () => {
                   setActiveResourceCard(injectedResource);
                   setInjectedResource(null);
@@ -286,6 +297,7 @@ export default function TraineeJourney() {
     clouds: { hover: "hover:border-indigo-500/60 hover:bg-indigo-500/5 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]", iconBg: "bg-indigo-500/10", glow: "group-hover:text-indigo-400", textColor: "text-indigo-400" },
     forest: { hover: "hover:border-emerald-500/60 hover:bg-emerald-500/5 hover:shadow-[0_0_40px_rgba(34,197,94,0.2)]", iconBg: "bg-emerald-500/10", glow: "group-hover:text-emerald-400", textColor: "text-emerald-400" },
     arcade: { hover: "hover:border-fuchsia-500/60 hover:bg-fuchsia-500/5 hover:shadow-[0_0_40px_rgba(217,70,239,0.2)]", iconBg: "bg-fuchsia-500/10", glow: "group-hover:text-fuchsia-400", textColor: "text-fuchsia-400" },
+    fairies: { hover: "hover:border-pink-500/60 hover:bg-pink-500/5 hover:shadow-[0_0_40px_rgba(236,72,153,0.2)]", iconBg: "bg-pink-500/10", glow: "group-hover:text-pink-400", textColor: "text-pink-400" },
   };
 
   if (currentPhase === 0) {
@@ -305,7 +317,7 @@ export default function TraineeJourney() {
           לאן נכנסים היום?
         </h1>
         <p className="text-neutral-500 mb-12 text-lg">בחר את העולם שמתאים לך הכי טוב עכשיו</p>
-        <div className="grid md:grid-cols-3 gap-6 w-full max-w-4xl">
+        <div className="grid md:grid-cols-4 gap-6 w-full max-w-5xl">
           {environments.map(env => {
             const wt = worldSelectThemes[env.id];
             return (
@@ -340,7 +352,7 @@ export default function TraineeJourney() {
 
         {/* BACK TO WORLDS BUTTON */}
         <div className="absolute top-6 right-6 z-10">
-          <button 
+          <button
             onClick={() => {
               setCurrentPhase(0);
               setSelectedEnv(null);
@@ -392,10 +404,10 @@ export default function TraineeJourney() {
                   <div className="absolute inset-0 bg-[#171a23] border border-amber-500/50 shadow-[0_0_40px_rgba(245,158,11,0.1)] rounded-[2rem] p-6 flex flex-col" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
                     <button onClick={(e) => { e.stopPropagation(); setActiveCard(null); setSelectedTrigger(null); }} className="text-neutral-500 text-sm hover:text-white mb-6 text-right">✕ חזור לקלפים</button>
                     <h4 className="font-bold text-xl mb-6 text-white text-center">מה העיר את {arc.name}?</h4>
-                    
+
                     <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
                       {arc.triggers.map((trigger, idx) => (
-                        <button 
+                        <button
                           key={idx}
                           onClick={(e) => { e.stopPropagation(); setSelectedTrigger(trigger); }}
                           className={`text-right p-4 rounded-xl border text-sm transition-all ${selectedTrigger === trigger ? 'bg-amber-500/10 text-amber-400 border-amber-500 font-bold' : 'bg-black/20 border-white/5 hover:border-white/20 text-neutral-300'}`}
@@ -403,23 +415,23 @@ export default function TraineeJourney() {
                           {trigger}
                         </button>
                       ))}
-                      <div 
+                      <div
                         onClick={(e) => e.stopPropagation()}
                         className={`p-4 rounded-xl border flex flex-col transition-all ${selectedTrigger === customInput && customInput.trim().length > 0 ? 'bg-amber-500/10 border-amber-500' : 'bg-black/20 border-white/5'}`}
                       >
                         <div className="text-xs text-neutral-500 mb-2 flex items-center gap-2">✎ אחר - נסח במילים שלך</div>
                         <div className="flex gap-2">
-                          <input 
-                            type="text" 
-                            placeholder="במילים שלי..." 
+                          <input
+                            type="text"
+                            placeholder="במילים שלי..."
                             value={customInput}
                             onChange={(e) => setCustomInput(e.target.value)}
                             className="bg-transparent flex-1 outline-none text-sm text-white"
                           />
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              if (customInput.trim()) setSelectedTrigger(customInput); 
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (customInput.trim()) setSelectedTrigger(customInput);
                             }}
                             className="text-xs bg-amber-500/20 text-amber-500 font-bold px-3 py-1 rounded hover:bg-amber-500 hover:text-black transition"
                           >
@@ -430,7 +442,7 @@ export default function TraineeJourney() {
                     </div>
 
                     <div className="mt-6">
-                      <motion.button 
+                      <motion.button
                         initial={{ opacity: 0 }} animate={{ opacity: selectedTrigger ? 1 : 0.3 }}
                         disabled={!selectedTrigger}
                         onClick={(e) => { e.stopPropagation(); setCurrentPhase(3); }}
@@ -484,7 +496,7 @@ export default function TraineeJourney() {
         <main className="flex-1 w-full max-w-3xl flex flex-col items-center relative z-10">
           <AnimatePresence mode="wait">
             <motion.div key={currentPhase} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full bg-[#171a23]/90 backdrop-blur-sm rounded-3xl border border-white/5 shadow-2xl p-8 md:p-12 relative">
-              
+
               {/* Card display */}
               <div className="flex justify-center gap-6 mb-8 mt-2">
                 {/* Original Archetype */}
@@ -501,7 +513,7 @@ export default function TraineeJourney() {
 
                 {/* Resource Archetype (if any) */}
                 {resourceArchetype && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}
                     className="w-32 h-48 md:w-40 md:h-64 rounded-2xl border-4 border-blue-500/40 overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.2)] relative"
                   >
@@ -527,14 +539,14 @@ export default function TraineeJourney() {
                   {currentStep.options[selectedEnv as keyof typeof currentStep.options]?.map((option, idx) => {
                     const isSelected = answer === option;
                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
-                    
+
                     return (
                       <motion.button
                         key={idx}
                         onClick={() => handleDialogueSelect(currentStep.id, option)}
                         className={`p-5 rounded-2xl border text-right transition-all duration-300 flex items-center justify-between ${
-                          isSelected 
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]' 
+                          isSelected
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
                           : 'bg-black/30 border-white/5 hover:border-white/20 text-neutral-300'
                         }`}
                       >
@@ -545,20 +557,20 @@ export default function TraineeJourney() {
                       </motion.button>
                     );
                   })}
-                  
+
                   {/* Custom Option for structured questions too! */}
-                  <div 
+                  <div
                     className={`p-5 rounded-2xl border col-span-1 md:col-span-2 transition-all duration-300 flex flex-col ${
                       answer === customInput && customInput.trim().length > 0
-                      ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]' 
+                      ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
                       : 'bg-black/30 border-white/5'
                     }`}
                   >
                     <div className="text-xs text-neutral-500 mb-2 flex items-center gap-2">✎ אחר - נסח במילים שלך</div>
                     <div className="flex gap-3 items-center">
-                      <input 
-                        type="text" 
-                        placeholder="הקלד תשובה אחרת..." 
+                      <input
+                        type="text"
+                        placeholder="הקלד תשובה אחרת..."
                         value={customInput}
                         onChange={(e) => setCustomInput(e.target.value)}
                         className="bg-transparent flex-1 outline-none text-sm text-white placeholder-neutral-600"
@@ -568,9 +580,9 @@ export default function TraineeJourney() {
                           }
                         }}
                       />
-                      <button 
-                        onClick={() => { 
-                          if (customInput.trim()) handleDialogueSelect(currentStep.id, customInput); 
+                      <button
+                        onClick={() => {
+                          if (customInput.trim()) handleDialogueSelect(currentStep.id, customInput);
                         }}
                         className="bg-amber-500/20 text-amber-500 px-5 py-2 rounded-lg text-sm font-bold hover:bg-amber-500 hover:text-black transition"
                       >
@@ -586,14 +598,14 @@ export default function TraineeJourney() {
                 <div className="mb-8 w-full">
                   <div className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col ${
                     answer && answer.trim().length > 0
-                    ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]' 
+                    ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
                     : 'bg-black/30 border-white/5'
                   }`}>
                     <div className="text-xs text-neutral-500 mb-2 flex items-center gap-2">✎ תשובה חופשית</div>
                     <div className="flex gap-3 items-center">
-                      <input 
-                        type="text" 
-                        placeholder="הקלד את התשובה שלך כאן..." 
+                      <input
+                        type="text"
+                        placeholder="הקלד את התשובה שלך כאן..."
                         value={customInput}
                         onChange={(e) => setCustomInput(e.target.value)}
                         className="bg-transparent flex-1 outline-none text-sm text-white placeholder-neutral-600"
@@ -603,9 +615,9 @@ export default function TraineeJourney() {
                           }
                         }}
                       />
-                      <button 
-                        onClick={() => { 
-                          if (customInput.trim()) handleDialogueSelect(currentStep.id, customInput); 
+                      <button
+                        onClick={() => {
+                          if (customInput.trim()) handleDialogueSelect(currentStep.id, customInput);
                         }}
                         className="bg-amber-500/20 text-amber-500 px-5 py-2 rounded-lg text-sm font-bold hover:bg-amber-500 hover:text-black transition"
                       >
@@ -629,8 +641,8 @@ export default function TraineeJourney() {
                           setActiveResourceCard(power.id);
                         }}
                         className={`p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center justify-center gap-3 ${
-                          isSelected 
-                          ? 'bg-amber-500/20 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' 
+                          isSelected
+                          ? 'bg-amber-500/20 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
                           : 'bg-[#11131a] border-white/10 hover:border-amber-500/50 hover:bg-black/40'
                         }`}
                       >
@@ -662,7 +674,7 @@ export default function TraineeJourney() {
                     <p className="text-neutral-300 text-lg mb-8 leading-relaxed max-w-md">
                       אין צורך להקליד כלום עכשיו.<br/>פשוט לעצום עיניים, לנשום עמוק, ולהקשיב לקול של המאמן שלך.
                     </p>
-                    
+
                     <div className="mt-8 text-amber-500/80 text-sm font-bold animate-pulse">
                       המאמן מנחה את השלב הזה. אנא המתן...
                     </div>
@@ -727,7 +739,7 @@ export default function TraineeJourney() {
               התחלנו את המסע במצב של סערה, ופגשנו את השומר שהתעורר כדי להגן עליך: <strong className="text-white text-xl ml-1">{chosenArchetype?.name}</strong>.
             </p>
             <p className="text-neutral-300 leading-relaxed text-lg">
-              הבנו שהתפקיד האמיתי שלו הוא לא לפגוע בך, אלא לשמור עליך מתוך פחד עמוק. 
+              הבנו שהתפקיד האמיתי שלו הוא לא לפגוע בך, אלא לשמור עליך מתוך פחד עמוק.
               הבאנו אליו את המשאב הפנימי שלך, והגענו להסכם חשוב לקראת השבוע הקרוב:
             </p>
           </div>
@@ -778,7 +790,7 @@ export default function TraineeJourney() {
             <div className="mb-6">
               <h4 className="text-neutral-400 font-bold text-sm mb-3">72 השעות הקרובות:</h4>
               <ul className="space-y-3 pr-4 border-r-2 border-amber-500/20 list-none">
-                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"]?.next72.map((item: string, idx: number) => (
+                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"|"fairies"]?.next72.map((item: string, idx: number) => (
                   <li key={idx} className="text-neutral-300 text-base relative before:content-[''] before:absolute before:right-[-22px] before:top-2 before:w-1.5 before:h-1.5 before:bg-amber-500 before:rounded-full">
                     {item}
                   </li>
@@ -789,7 +801,7 @@ export default function TraineeJourney() {
             <div>
               <h4 className="text-neutral-400 font-bold text-sm mb-3">השבוע הקרוב:</h4>
               <ul className="space-y-3 pr-4 border-r-2 border-amber-500/20 list-none">
-                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"]?.nextWeek.map((item: string, idx: number) => (
+                {selectedEnv && homeworkPlans[journeyStage || 1]?.[selectedEnv as "clouds"|"forest"|"arcade"|"fairies"]?.nextWeek.map((item: string, idx: number) => (
                   <li key={idx} className="text-neutral-300 text-base relative before:content-[''] before:absolute before:right-[-22px] before:top-2 before:w-1.5 before:h-1.5 before:bg-amber-500 before:rounded-full">
                     {item}
                   </li>
@@ -808,7 +820,7 @@ export default function TraineeJourney() {
           </p>
 
           <div className="mt-10 mb-4 print:hidden">
-            <button 
+            <button
               onClick={() => {
                 if (sessionId) localStorage.removeItem(`session_${sessionId}`);
                 setCurrentPhase(0);
