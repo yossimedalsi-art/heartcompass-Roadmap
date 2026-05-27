@@ -12,7 +12,7 @@ export type Archetype = {
 export type World = {
   id: string;
   title: string;
-  theme: "clouds" | "forest" | "arcade";
+  theme: "clouds" | "forest" | "arcade" | "fairies";
   archetypes: Archetype[];
 };
 
@@ -203,7 +203,7 @@ export const worldsData: World[] = [
   {
     id: "fairies",
     title: "יער הפיות והשדונים",
-    theme: "forest",
+    theme: "fairies",
     archetypes: [
       {
         id: "perfection_fairy",
