@@ -382,11 +382,19 @@ export default function TraineeJourney() {
         {/* BACK TO WORLDS BUTTON */}
         <div className="absolute top-6 right-6 z-10">
           <button
-            onClick={() => {
+            onClick={async () => {
               setCurrentPhase(0);
               setSelectedEnv(null);
               setActiveCard(null);
               setSelectedTrigger(null);
+              if (sessionId) {
+                try {
+                  const docRef = doc(db, "live_sessions", sessionId);
+                  await setDoc(docRef, { phase: 0, environment: null, archetype: null, trigger: null }, { merge: true });
+                } catch (e) {
+                  console.error("Error resetting phase to world select", e);
+                }
+              }
             }}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition text-sm text-neutral-400 hover:text-white"
           >
@@ -395,13 +403,31 @@ export default function TraineeJourney() {
         </div>
 
         <header className="mb-12 text-center mt-12">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-4">מי חסם לך את הדרך היום?</h1>
-          <p className="text-neutral-400">הפוך את הקלף של היצור שהכי מזדהה עם איך שאתה מרגיש עכשיו.</p>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+            {journeyStage === 4 ? 'מי חוסם לך את הדרך למטרה?' : 'מי חסם לך את הדרך היום?'}
+          </h1>
+          <p className="text-neutral-400">
+            {journeyStage === 4
+              ? 'בחר את הדמות שמונעת ממך להתקדם לעבר מה שאתה רוצה.'
+              : 'הפוך את הקלף של היצור שהכי מזדהה עם איך שאתה מרגיש עכשיו.'}
+          </p>
         </header>
 
+        {(() => {
+          const goalTriggers: Record<string, string[]> = {
+            clouds: ["מייצרת מחשבות ספק וחרדה סביב המטרה שלי", "גורמת לי לנתח ולתכנן במקום לפעול", "מבלבלת אותי עד שאני לא יודע מה הצעד הנכון", "גורמת לי לדחות עד שאהיה מוכן מספיק"],
+            forest: ["גורמת לי לפחד מה יגידו אחרים על המטרה שלי", "מרגישה שאני לא ראוי להצליח במטרה הזו", "גורמת לי להסתיר את המטרה מאנשים קרובים", "מייצרת בי ספק אם אני בכלל ראוי למטרה הזו"],
+            arcade: ["מסיחה את דעתי לעשרה דברים אחרים", "גורמת לי לרצות שהמטרה תהיה מושלמת לפני שמתחיל", "מייצרת ויכוח פנימי על אם זו המטרה הנכונה", "שומרת אותי עסוק בכל דבר חוץ מהמטרה עצמה"],
+            fairies: ["הופכת כל פעולה ממשית לפחות מושכת מהחלום", "גורמת לי לחכות לרגע הנכון שלעולם לא מגיע", "מנתקת אותי מהמטרה ברגע שמופיע הקושי הראשון", "לוחשת לי שהמטרה היא פנטזיה ולא מציאות"],
+          };
+
+          return (
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000 pb-20">
           {activeWorld?.archetypes.map(arc => {
             const isFlipped = activeCard === arc.id;
+            const triggersToShow = (journeyStage === 4 && selectedEnv && goalTriggers[selectedEnv])
+              ? goalTriggers[selectedEnv]
+              : arc.triggers;
 
             return (
               <div key={arc.id} className="relative h-[500px] [perspective:1000px]">
@@ -437,10 +463,12 @@ export default function TraineeJourney() {
                   {/* Back */}
                   <div className="absolute inset-0 bg-[#171a23] border border-amber-500/50 shadow-[0_0_40px_rgba(245,158,11,0.1)] rounded-[2rem] p-6 flex flex-col" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
                     <button onClick={(e) => { e.stopPropagation(); setActiveCard(null); setSelectedTrigger(null); }} className="text-neutral-500 text-sm hover:text-white mb-6 text-right">✕ חזור לקלפים</button>
-                    <h4 className="font-bold text-xl mb-6 text-white text-center">מה העיר את {arc.name}?</h4>
+                    <h4 className="font-bold text-xl mb-6 text-white text-center">
+                      {journeyStage === 4 ? `איך ${arc.name} חוסמת את דרכך למטרה?` : `מה העיר את ${arc.name}?`}
+                    </h4>
 
                     <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                      {arc.triggers.map((trigger, idx) => (
+                      {triggersToShow.map((trigger, idx) => (
                         <button
                           key={idx}
                           onClick={(e) => { e.stopPropagation(); setSelectedTrigger(trigger); }}
@@ -491,6 +519,8 @@ export default function TraineeJourney() {
             );
           })}
         </div>
+          );
+        })()}
         {renderInjectedModal()}
         <Backpack resourceArchetype={resourceArchetype} onUseResource={handleUseResource} />
         {renderResourcePowerFlash()}
