@@ -803,24 +803,48 @@ export default function TraineeJourney() {
           </div>
 
           <div className="w-full bg-[#11131a] border border-white/10 rounded-2xl p-6 mb-8">
-            <h3 className="text-amber-500 font-bold text-sm tracking-widest uppercase mb-6 text-center">מעגל החסם שזיהינו</h3>
+            <h3 className="text-amber-500 font-bold text-sm tracking-widest uppercase mb-6 text-center">
+              {journeyStage === 4 ? 'מפת המטרה שלנו' : 'מעגל החסם שזיהינו'}
+            </h3>
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
               <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
-                <span className="text-xs text-neutral-500 mb-2">מחשבה (פרשנות)</span>
-                <span className="text-white font-bold">{structuredAnswers['step_6_thought'] || structuredAnswers['s2_step_3_interpretation'] || structuredAnswers['s3_step_2_secondary_gain'] || structuredAnswers['s4_step_4_secondary_gain'] || 'לא צוין'}</span>
+                <span className="text-xs text-neutral-500 mb-2">
+                  {journeyStage === 4 ? 'המטרה שלי' : 'מחשבה (פרשנות)'}
+                </span>
+                <span className="text-white font-bold">
+                  {journeyStage === 4
+                    ? (structuredAnswers['s4_step_1_what_i_want'] || 'לא צוין')
+                    : (structuredAnswers['step_6_thought'] || structuredAnswers['s2_step_3_interpretation'] || structuredAnswers['s3_step_2_secondary_gain'] || 'לא צוין')}
+                </span>
               </div>
               <div className="text-amber-500">→</div>
               <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
-                <span className="text-xs text-neutral-500 mb-2">רגש / נקודה רגישה</span>
-                <span className="text-white font-bold">{structuredAnswers['step_3_feeling'] || structuredAnswers['s2_step_4_sensitive_spot'] || structuredAnswers['s3_step_3_need'] || structuredAnswers['s4_step_3_encounter'] || 'לא צוין'}</span>
+                <span className="text-xs text-neutral-500 mb-2">
+                  {journeyStage === 4 ? 'הכוחות שלי' : 'רגש / נקודה רגישה'}
+                </span>
+                <span className="text-white font-bold">
+                  {journeyStage === 4
+                    ? (structuredAnswers['s4_step_2_capability'] || 'לא צוין')
+                    : (structuredAnswers['step_3_feeling'] || structuredAnswers['s2_step_4_sensitive_spot'] || structuredAnswers['s3_step_3_need'] || 'לא צוין')}
+                </span>
               </div>
               <div className="text-amber-500">→</div>
               <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
-                <span className="text-xs text-neutral-500 mb-2">תגובה אוטומטית</span>
-                <span className="text-white font-bold">{structuredAnswers['step_5_urge'] || structuredAnswers['s2_step_5_reaction'] || structuredAnswers['s3_step_1_trigger'] || 'הפעולה שהחסם מייצר'}</span>
+                <span className="text-xs text-neutral-500 mb-2">
+                  {journeyStage === 4 ? 'מה עוצר אותי' : 'תגובה אוטומטית'}
+                </span>
+                <span className="text-white font-bold">
+                  {journeyStage === 4
+                    ? (structuredAnswers['s4_step_4_secondary_gain'] || 'לא צוין')
+                    : (structuredAnswers['step_5_urge'] || structuredAnswers['s2_step_5_reaction'] || structuredAnswers['s3_step_1_trigger'] || 'הפעולה שהחסם מייצר')}
+                </span>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 text-center mt-4">זהו הלופ האוטומטי שהשומר הפעיל כדי להגן עליך. כעת כשאנחנו רואים אותו במעגל, אנחנו יכולים לעצור אותו.</p>
+            <p className="text-xs text-neutral-500 text-center mt-4">
+              {journeyStage === 4
+                ? 'זוהי מפת המטרה שלנו — הרצון, הכוחות הקיימים, ומה שעוצר. הצעד הבא נמצא בהסכם מעלה.'
+                : 'זהו הלופ האוטומטי שהשומר הפעיל כדי להגן עליך. כעת כשאנחנו רואים אותו במעגל, אנחנו יכולים לעצור אותו.'}
+            </p>
           </div>
 
           <div className="w-full text-right bg-[#11131a] border border-white/5 rounded-2xl p-6 mb-8 print:border-neutral-200 print:bg-transparent">
