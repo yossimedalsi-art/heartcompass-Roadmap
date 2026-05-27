@@ -7,11 +7,13 @@ export type JourneyStep = {
     clouds: string[];
     forest: string[];
     arcade: string[];
+    fairies?: string[];
   };
   patternRevealed?: {
     clouds: string[];
     forest: string[];
     arcade: string[];
+    fairies?: string[];
   };
   coachFraming?: string;
   coachDeepeningQuestions?: string[];
