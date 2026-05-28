@@ -456,7 +456,7 @@ export default function TraineeJourney() {
                     </h4>
 
                     <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                      {arc.triggers.map((trigger, idx) => (
+                      {(journeyStage === 4 && arc.goalTriggers ? arc.goalTriggers : arc.triggers).map((trigger, idx) => (
                         <button
                           key={idx}
                           onClick={(e) => { e.stopPropagation(); setSelectedTrigger(trigger); }}
