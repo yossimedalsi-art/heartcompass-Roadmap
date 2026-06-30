@@ -688,7 +688,7 @@ export default function TraineeJourney() {
             </button>
           </div>
         </header>
-        {showMap && <JourneyMap currentPhase={currentPhase} onClose={() => setShowMap(false)} />}
+        {showMap && <JourneyMap currentPhase={currentPhase} phases={activePhases} onClose={() => setShowMap(false)} />}
 
         <main className="flex-1 w-full max-w-3xl flex flex-col items-center relative z-10">
           <AnimatePresence mode="wait">
@@ -900,9 +900,16 @@ export default function TraineeJourney() {
                       <p className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
                         <Music className="w-3.5 h-3.5" /> 528 Hz — תדר ריפוי (הפעל עם המדיטציה)
                       </p>
-                      <audio controls loop className="w-full" src="/audio/528hz.mp3">
+                      <audio controls loop className="w-full mb-3" src="/audio/528hz.mp3">
                         הדפדפן אינו תומך בהפעלת שמע.
                       </audio>
+                      <a
+                        href="/audio/528hz.mp3"
+                        download="528hz-healing.mp3"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold rounded-xl hover:bg-blue-500 hover:text-white transition text-sm"
+                      >
+                        <Download className="w-4 h-4" /> הורד את הקובץ
+                      </a>
                     </div>
 
                     <div className="text-amber-500/80 text-sm font-bold animate-pulse">
@@ -1123,7 +1130,7 @@ export default function TraineeJourney() {
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
               <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
                 <span className="text-xs text-neutral-500 mb-2">
-                  {journeyStage === 4 ? 'המטרה שלי' : journeyStage === 3 ? 'הטריגר שהעיר את ההגנה' : 'מחשבה (פרשנות)'}
+                  {journeyStage === 4 ? 'המטרה שלי' : journeyStage === 3 ? 'הטריגר שהעיר את התגובה' : 'מחשבה (פרשנות)'}
                 </span>
                 <span className="text-white font-bold">
                   {journeyStage === 4
@@ -1136,7 +1143,7 @@ export default function TraineeJourney() {
               <div className="text-amber-500">→</div>
               <div className="flex flex-col items-center bg-black/40 p-4 rounded-xl border border-white/5 flex-1 w-full">
                 <span className="text-xs text-neutral-500 mb-2">
-                  {journeyStage === 4 ? 'הכוחות שלי' : journeyStage === 3 ? 'מה ניסתה ההגנה להשיג' : 'רגש / נקודה רגישה'}
+                  {journeyStage === 4 ? 'הכוחות שלי' : journeyStage === 3 ? 'מה ניסתה התגובה להשיג' : 'רגש / נקודה רגישה'}
                 </span>
                 <span className="text-white font-bold">
                   {journeyStage === 4
